@@ -5,7 +5,7 @@ services:
   resturants-hub-db:
     container_name: resturants-hub
     hostname: postgresql
-    image: postgres:12-alpine
+    image: postgres:16-alpine
     networks:
       - backend
     ports:

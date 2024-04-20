@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"net/url"
 	"strings"
 
@@ -61,7 +60,6 @@ func (builder *sqlBuilder) Insert(tableName string, data interface{}) string {
 }
 
 func (builder *sqlBuilder) Update(tableName string, id *int64, data interface{}) string {
-	fmt.Println(data)
 	ds := goqu.Update(tableName).Set(data).Where(goqu.Ex{
 		"id": id,
 	}).Returning(goqu.T(tableName).All())

@@ -45,10 +45,10 @@ func SqlDb() *sql.DB {
 	// prepare logger
 	loggerOptions := []sqldblogger.Option{
 		sqldblogger.WithSQLQueryFieldname("sql"),
-		sqldblogger.WithWrapResult(false),
-		sqldblogger.WithExecerLevel(sqldblogger.LevelDebug),
-		sqldblogger.WithQueryerLevel(sqldblogger.LevelDebug),
-		sqldblogger.WithPreparerLevel(sqldblogger.LevelDebug),
+		// sqldblogger.WithWrapResult(false),
+		/* 		sqldblogger.WithExecerLevel(sqldblogger.LevelDebug),
+		   		sqldblogger.WithQueryerLevel(sqldblogger.LevelDebug),
+		   		sqldblogger.WithPreparerLevel(sqldblogger.LevelDebug), */
 	}
 	db = sqldblogger.OpenDriver(dsn, db.Driver(), zerologadapter.New(zlogger), loggerOptions...)
 	return db

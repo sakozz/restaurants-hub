@@ -1,6 +1,8 @@
 package main
 
-import "resturants-hub.com/m/v2/app"
+import (
+	"resturants-hub.com/m/v2/app"
+)
 
 func main() {
 
