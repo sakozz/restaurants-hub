@@ -13,7 +13,7 @@ import (
 func RunMigrations() {
 	migrationUrl := os.Getenv("MIGRATION_URL")
 
-	migration, err := migrate.New(migrationUrl, DbConnectionString())
+	migration, err := migrate.New("file://"+migrationUrl, DbConnectionString())
 
 	if err != nil {
 		log.Fatal("Error connecting migration URL: ", err)
