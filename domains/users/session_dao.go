@@ -11,7 +11,7 @@ import (
 
 type Session struct {
 	Id                int64     `json:"id" goqu:"skipinsert omitempty"`
-	UserId            int64     `json:"userId" db:"user_id" goqu:"omitempty"`
+	ProfileId         int64     `json:"profileId" db:"profile_id" goqu:"omitempty"`
 	Provider          string    `json:"provider" db:"provider" goqu:"omitempty"`
 	Email             string    `json:"email" db:"email" goqu:"omitempty"`
 	AccessToken       string    `json:"accessToken" db:"access_token" goqu:"omitempty"`
@@ -50,6 +50,7 @@ func (connection *sessionConnection) Create(payload *Session) (*Session, rest_er
 
 	row := connection.db.QueryRowx(sqlQuery)
 	if row.Err() != nil {
+		fmt.Println(row.Err())
 		if uniquenessViolation, constraintName := database.HasUniquenessViolation(row.Err()); uniquenessViolation {
 			return nil, rest_errors.InvalidError(ErrorMessage(constraintName))
 		}

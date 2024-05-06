@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// MARK: SsoUserInfo
 type SsoUserInfo struct {
 	Sub        string `json:"sub"`
 	Name       string `json:"name"`
@@ -17,6 +18,7 @@ type SsoUserInfo struct {
 type User struct {
 	ID        int64        `json:"id" db:"id" goqu:"skipinsert"`
 	Email     string       `json:"email" db:"email"`
+	Role      string       `json:"role" goqu:"skipinsert"`
 	FirstName string       `json:"firstName" db:"first_name"`
 	LastName  string       `json:"lastName" db:"last_name"`
 	AvatarURL string       `json:"avatarUrl" db:"avatar_url"`
@@ -64,11 +66,13 @@ type PrivateUser struct {
 	DeletedAt sql.NullTime `json:"deletedAt"`
 }
 
+// MARK: PayloadTypes
 type PayloadTypes interface {
 	PublicUser | PrivateUser | SearchUserParams
 }
 
 /* Data format for returning payload */
+// MARK: UserPayload
 type UserPayload[T PayloadTypes] struct {
 	Id         int64  `json:"id"`
 	Type       string `json:"type"`

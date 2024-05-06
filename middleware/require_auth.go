@@ -10,6 +10,7 @@ import (
 	rest_errors "resturants-hub.com/m/v2/utils"
 )
 
+// MARK: RequireAuth
 func RequireAuth(c *gin.Context) {
 	/* Get cookie from request */
 	tokenString, err := c.Cookie(os.Getenv("AUTH_COOKIE_NAME"))
@@ -28,7 +29,7 @@ func RequireAuth(c *gin.Context) {
 
 	// Get user by id
 	usersDao := users.NewUserDao()
-	user, err := usersDao.Get(&session.UserId)
+	user, err := usersDao.Get(&session.ProfileId)
 	if err != nil {
 		unauthorisedError(c)
 		return
@@ -40,6 +41,7 @@ func RequireAuth(c *gin.Context) {
 	c.Next()
 }
 
+// MARK: unauthorisedError
 func unauthorisedError(c *gin.Context) {
 	restErr := rest_errors.NewUnauthorizedError("Unauthorised Error")
 	c.AbortWithStatusJSON(restErr.Status(), restErr)

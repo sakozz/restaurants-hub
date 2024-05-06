@@ -10,6 +10,7 @@ import (
 	rest_errors "resturants-hub.com/m/v2/utils"
 )
 
+// MARK: UsersDao
 type UsersDao interface {
 	Create(*User) (*User, rest_errors.RestErr)
 	FindOrCreate(*User) (*User, rest_errors.RestErr)
@@ -52,7 +53,7 @@ func (user *User) Validate() rest_errors.RestErr {
 
 func (connection *connection) Create(payload *User) (*User, rest_errors.RestErr) {
 	user := &User{}
-	sqlQuery := connection.sqlBuilder.Insert("users", payload)
+	sqlQuery := connection.sqlBuilder.Insert("profiles", payload)
 
 	row := connection.db.QueryRowx(sqlQuery)
 	if row.Err() != nil {
@@ -76,7 +77,7 @@ func (connection *connection) FindOrCreate(userData *User) (*User, rest_errors.R
 		return user, nil
 	}
 
-	sqlQuery := connection.sqlBuilder.Insert("users", userData)
+	sqlQuery := connection.sqlBuilder.Insert("profiles", userData)
 
 	row := connection.db.QueryRowx(sqlQuery)
 	if row.Err() != nil {
@@ -93,7 +94,7 @@ func (connection *connection) FindOrCreate(userData *User) (*User, rest_errors.R
 }
 
 func (connection *connection) Update(user *User, payload interface{}) (*User, rest_errors.RestErr) {
-	sqlQuery := connection.sqlBuilder.Update("users", &user.ID, payload)
+	sqlQuery := connection.sqlBuilder.Update("profiles", &user.ID, payload)
 	row := connection.db.QueryRowx(sqlQuery)
 	if row.Err() != nil {
 		if uniquenessViolation, constraintName := database.HasUniquenessViolation(row.Err()); uniquenessViolation {
@@ -107,7 +108,7 @@ func (connection *connection) Update(user *User, payload interface{}) (*User, re
 
 func (connection *connection) Get(id *int64) (*User, rest_errors.RestErr) {
 	user := &User{}
-	query := connection.sqlBuilder.Find("users", map[string]interface{}{"id": id})
+	query := connection.sqlBuilder.Find("profiles", map[string]interface{}{"id": id})
 	err := connection.db.Get(user, query)
 
 	if err != nil {
@@ -121,10 +122,10 @@ func (connection *connection) Get(id *int64) (*User, rest_errors.RestErr) {
 func (connection *connection) Where(params map[string]interface{}) (*User, rest_errors.RestErr) {
 	user := &User{}
 
-	query := connection.sqlBuilder.SearchBy("users", params)
-
+	query := connection.sqlBuilder.SearchBy("profiles", params)
 	err := connection.db.Get(user, query)
 	if err != nil {
+		fmt.Println("Error Occured:", err)
 		message := fmt.Sprintf("Sorry, user doesn't exist")
 		return nil, rest_errors.NewNotFoundError(message)
 	}
@@ -134,7 +135,7 @@ func (connection *connection) Where(params map[string]interface{}) (*User, rest_
 
 func (connection *connection) Search(params url.Values) (Users, rest_errors.RestErr) {
 	var users Users
-	sqlQuery := connection.sqlBuilder.Filter("users", params)
+	sqlQuery := connection.sqlBuilder.Filter("profiles", params)
 	err := connection.db.Select(&users, sqlQuery)
 	if err != nil {
 		return nil, rest_errors.NewNotFoundError(err.Error())

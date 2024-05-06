@@ -86,7 +86,7 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 		ExpiresAt:    token.Expiry,
 		RefreshToken: token.RefreshToken,
 		Email:        user.Email,
-		UserId:       user.ID,
+		ProfileId:    user.ID,
 	})
 	_, error := handler.service.CreateSession(&session)
 
