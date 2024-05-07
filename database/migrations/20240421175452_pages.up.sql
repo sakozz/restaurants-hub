@@ -12,8 +12,8 @@ CREATE TABLE
         updated_at timestamp NOT NULL DEFAULT now (),
         deleted_at timestamp,
         profile_id int NOT NULL,
-        resturant_id int NOT NULL,
-        CONSTRAINT fk_resturant FOREIGN KEY (resturant_id) REFERENCES resturants (id),
+        restaurant_id int NOT NULL,
+        CONSTRAINT fk_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurants (id),
         CONSTRAINT fk_author FOREIGN KEY (profile_id) REFERENCES profiles (id)
     );
 

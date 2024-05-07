@@ -3,7 +3,7 @@ BEGIN;
 CREATE TABLE
     IF NOT EXISTS dishes (
         id serial PRIMARY KEY,
-        resturant_id int NOT NULL,
+        restaurant_id int NOT NULL,
         name VARCHAR(50) NOT NULL,
         description VARCHAR(5000) NOT NULL,
         price INT NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE
         created_at timestamp NOT NULL DEFAULT now (),
         updated_at timestamp NOT NULL DEFAULT now (),
         deleted_at timestamp,
-        CONSTRAINT fk_resturant FOREIGN KEY (resturant_id) REFERENCES resturants (id)
+        CONSTRAINT fk_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurants (id)
     );
 
 CREATE TRIGGER update_dish_updated_at BEFORE

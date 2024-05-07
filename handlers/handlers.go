@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -38,6 +39,18 @@ func WhitelistQueryParams(c *gin.Context, allowdKeys []string) url.Values {
 	return params
 }
 
+func getIdFromUrl(c *gin.Context, fromQuery bool) (int64, rest_errors.RestErr) {
+	paramId := c.Param("id")
+	if fromQuery {
+		paramId = c.Query("id")
+	}
+	id, err := strconv.ParseInt(paramId, 10, 64)
+	if err != nil {
+		return 0, rest_errors.NewBadRequestError("id should be a number")
+	}
+	return id, nil
+}
+
 func (p *payloadHandler) Require(attrs []string) *payloadHandler {
 	p.Errors = []rest_errors.RestErr{}
 	for _, attr := range attrs {
@@ -68,7 +81,6 @@ func (p *payloadHandler) ClearEmpty() {
 
 func (p *payloadHandler) SetData(data map[string]interface{}) *payloadHandler {
 	p.Data = data
-	fmt.Println(p.Data)
 	return p
 }
 

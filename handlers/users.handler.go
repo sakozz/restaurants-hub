@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"resturants-hub.com/m/v2/domains/users"
@@ -28,18 +27,6 @@ func NewUsersHandler() UsersHandler {
 		service: services.NewUsersService(),
 		payload: NewParamsHandler(),
 	}
-}
-
-func getIdFromUrl(c *gin.Context, fromQuery bool) (int64, rest_errors.RestErr) {
-	paramId := c.Param("id")
-	if fromQuery {
-		paramId = c.Query("id")
-	}
-	id, userErr := strconv.ParseInt(paramId, 10, 64)
-	if userErr != nil {
-		return 0, rest_errors.NewBadRequestError("user id should be a number")
-	}
-	return id, nil
 }
 
 func (ctr *usersHandler) Get(c *gin.Context) {
