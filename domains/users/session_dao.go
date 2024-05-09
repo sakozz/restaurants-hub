@@ -10,7 +10,7 @@ import (
 )
 
 type Session struct {
-	Id                int64     `json:"id" goqu:"skipinsert omitempty"`
+	Id                int64     `json:"id" db:"id" goqu:"skipinsert"`
 	ProfileId         int64     `json:"profileId" db:"profile_id" goqu:"omitempty"`
 	Provider          string    `json:"provider" db:"provider" goqu:"omitempty"`
 	Email             string    `json:"email" db:"email" goqu:"omitempty"`

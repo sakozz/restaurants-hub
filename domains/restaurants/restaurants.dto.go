@@ -27,10 +27,10 @@ type Restaurant struct {
 
 /* Struct for creating new restaurant */
 type CreateRestaurantPayload struct {
-	ProfileId     int64  `json:"profileId" db:"profile_id"`
-	Name          string `json:"name" db:"name"`
-	Description   string `json:"description" db:"description"`
-	Email         string `json:"email" db:"email"`
+	ProfileId     int64  `json:"profileId" db:"profile_id" validate:"required"`
+	Name          string `json:"name" db:"name" validate:"required,min=3,max=50"`
+	Description   string `json:"description" db:"description" validate:"required,min=10"`
+	Email         string `json:"email" db:"email" validate:"required,email"`
 	Phone         string `json:"phone" db:"phone"`
 	Mobile        string `json:"mobile" db:"mobile" goqu:"omitempty"`
 	Website       string `json:"website" db:"website" goqu:"omitempty"`

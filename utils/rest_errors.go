@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type RestErr interface {
@@ -12,13 +15,15 @@ type RestErr interface {
 	Status() int
 	Error() string
 	Causes() []interface{}
+	ValidationErrors() map[string][]interface{}
 }
 
 type restErr struct {
-	ErrMessage string        `json:"message"`
-	ErrStatus  int           `json:"status"`
-	ErrError   string        `json:"error"`
-	ErrCauses  []interface{} `json:"causes"`
+	ErrMessage     string                   `json:"message"`
+	ErrStatus      int                      `json:"status"`
+	ErrError       string                   `json:"error"`
+	ErrCauses      []interface{}            `json:"causes"`
+	ErrValidations map[string][]interface{} `json:"validationErrors"`
 }
 
 func (e restErr) Error() string {
@@ -38,12 +43,64 @@ func (e restErr) Causes() []interface{} {
 	return e.ErrCauses
 }
 
-func NewRestError(message string, status int, err string, causes []interface{}) RestErr {
-	return restErr{
+func (e restErr) ValidationErrors() map[string][]interface{} {
+	return e.ErrValidations
+}
+
+func NewValidationError(message string, errs error) RestErr {
+
+	result := restErr{
 		ErrMessage: message,
-		ErrStatus:  status,
-		ErrError:   err,
-		ErrCauses:  causes,
+		ErrStatus:  http.StatusUnprocessableEntity,
+		ErrError:   "validation_error",
+	}
+	var causes = map[string][]interface{}{}
+	for _, err := range errs.(validator.ValidationErrors) {
+		causes[err.StructField()] = append(causes[err.StructField()], formattedValidationErrors(err))
+	}
+
+	result.ErrValidations = causes
+	return result
+}
+
+func formattedValidationErrors(err validator.FieldError) interface{} {
+	switch err.ActualTag() {
+	case "required":
+		return map[string]interface{}{
+			"error":    "required",
+			"expected": err.Value(),
+			"provided": nil,
+		}
+	case "email":
+		return map[string]interface{}{
+			"error": "invalid_email_format",
+		}
+	case "min":
+		minLength, _ := strconv.ParseInt(err.Param(), 10, 64)
+		return map[string]interface{}{
+			"error":    "min_length_required",
+			"expected": minLength,
+			"provided": len(err.Value().(string)),
+		}
+	case "max":
+		maxLength, _ := strconv.ParseInt(err.Param(), 10, 64)
+		return map[string]interface{}{
+			"error":    "max_length_exceeded",
+			"expected": maxLength,
+			"provided": len(err.Value().(string)),
+		}
+	default:
+		return err.Tag()
+	}
+}
+
+func NewRestError(message string, status int, err string, causes []interface{}, validationErrs map[string][]interface{}) RestErr {
+	return restErr{
+		ErrMessage:     message,
+		ErrStatus:      status,
+		ErrError:       err,
+		ErrCauses:      causes,
+		ErrValidations: validationErrs,
 	}
 }
 

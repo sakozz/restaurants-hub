@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"golang.org/x/exp/slices"
 	rest_errors "resturants-hub.com/m/v2/utils"
 )
@@ -83,6 +84,10 @@ func (p *payloadHandler) SetData(data map[string]interface{}) *payloadHandler {
 	p.Data = data
 	return p
 }
+
+var (
+	Validate = validator.New(validator.WithRequiredStructEnabled())
+)
 
 /* func buildUpdatePayload(isPartialUpdat bool, payload interface{}) interface{} {
 
