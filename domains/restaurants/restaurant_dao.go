@@ -17,6 +17,7 @@ type connection struct {
 type RestaurantDao interface {
 	Create(*CreateRestaurantPayload) (*Restaurant, rest_errors.RestErr)
 	Search(url.Values) (Restaurants, rest_errors.RestErr)
+	Get(id *int64) (*Restaurant, rest_errors.RestErr)
 }
 
 func NewRestaurantDao() RestaurantDao {
@@ -39,6 +40,18 @@ func (connection *connection) Create(payload *CreateRestaurantPayload) (*Restaur
 	}
 
 	row.StructScan(restaurant)
+	return restaurant, nil
+}
+func (connection *connection) Get(id *int64) (*Restaurant, rest_errors.RestErr) {
+	restaurant := &Restaurant{}
+	query := connection.sqlBuilder.Find("restaurants", map[string]interface{}{"id": id})
+	err := connection.db.Get(restaurant, query)
+
+	if err != nil {
+		message := fmt.Sprintf("Sorry, the record with id %v doesn't exist", *id)
+		return nil, rest_errors.NewNotFoundError(message)
+	}
+
 	return restaurant, nil
 }
 

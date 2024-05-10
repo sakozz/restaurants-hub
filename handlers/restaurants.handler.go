@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"resturants-hub.com/m/v2/domains/restaurants"
-	"resturants-hub.com/m/v2/domains/users"
 	"resturants-hub.com/m/v2/services"
 	rest_errors "resturants-hub.com/m/v2/utils"
 )
@@ -60,13 +59,13 @@ func (ctr *adminRestaurantsHandler) Get(c *gin.Context) {
 		return
 	}
 
-	user, getErr := ctr.service.GetUser(id)
+	restaurant, getErr := ctr.dao.Get(&id)
 	if getErr != nil {
 		c.JSON(getErr.Status(), getErr)
 		return
 	}
 
-	c.JSON(http.StatusOK, user.Serialize(users.Admin))
+	c.JSON(http.StatusOK, restaurant.Serialize(restaurants.AdminDetails))
 }
 
 func (ctr *adminRestaurantsHandler) List(c *gin.Context) {
