@@ -60,7 +60,7 @@ func (connection *connection) Create(payload *User) (*User, rest_errors.RestErr)
 		if uniquenessViolation, constraintName := database.HasUniquenessViolation(row.Err()); uniquenessViolation {
 			return nil, rest_errors.InvalidError(ErrorMessage(constraintName))
 		}
-		return nil, rest_errors.NewInternalServerError("Server Error", row.Err())
+		return nil, rest_errors.NewInternalServerError(row.Err())
 	}
 
 	row.StructScan(user)
@@ -84,7 +84,7 @@ func (connection *connection) FindOrCreate(userData *User) (*User, rest_errors.R
 		if uniquenessViolation, constraintName := database.HasUniquenessViolation(row.Err()); uniquenessViolation {
 			return nil, rest_errors.InvalidError(ErrorMessage(constraintName))
 		}
-		return nil, rest_errors.NewInternalServerError("Server Error", row.Err())
+		return nil, rest_errors.NewInternalServerError(row.Err())
 	}
 
 	newUser := &User{}
@@ -100,7 +100,7 @@ func (connection *connection) Update(user *User, payload interface{}) (*User, re
 		if uniquenessViolation, constraintName := database.HasUniquenessViolation(row.Err()); uniquenessViolation {
 			return nil, rest_errors.InvalidError(ErrorMessage(constraintName))
 		}
-		return nil, rest_errors.NewInternalServerError("Server Error", row.Err())
+		return nil, rest_errors.NewInternalServerError(row.Err())
 	}
 	row.StructScan(user)
 	return user, nil

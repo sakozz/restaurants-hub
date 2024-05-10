@@ -33,9 +33,9 @@ func (connection *connection) Create(payload *CreateRestaurantPayload) (*Restaur
 	if row.Err() != nil {
 		fmt.Println(row.Err())
 		if uniquenessViolation, constraintName := database.HasUniquenessViolation(row.Err()); uniquenessViolation {
-			return nil, rest_errors.InvalidError(ErrorMessage(constraintName))
+			return nil, rest_errors.NewValidationError(UniquenessErrors(constraintName))
 		}
-		return nil, rest_errors.NewInternalServerError("Server Error", row.Err())
+		return nil, rest_errors.NewInternalServerError(row.Err())
 	}
 
 	row.StructScan(restaurant)
@@ -53,12 +53,17 @@ func (connection *connection) Search(params url.Values) (Restaurants, rest_error
 	return restaurants, nil
 }
 
-func ErrorMessage(errorKey string) string {
-	errors := map[string]string{
-		"restaurants_name_key":  "name must be unique",
-		"restaurants_email_key": "Email must be unique",
-		"restaurant_not_found":  "Restaurant is not found",
+func UniquenessErrors(errorKey string) *rest_errors.ValidationErrs {
+	causes := rest_errors.ValidationErrs{}
+	errKeyMaps := map[string]string{
+		"restaurants_name_key":  "name",
+		"restaurants_email_key": "email",
+		"restaurants_phone_key": "phone",
 	}
 
-	return errors[errorKey]
+	attr := errKeyMaps[errorKey]
+	causes[attr] = []interface{}{
+		rest_errors.FormattedDbValidationError(attr, "uniqueness"),
+	}
+	return &causes
 }

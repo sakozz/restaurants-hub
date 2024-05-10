@@ -33,8 +33,6 @@ type SessionDao interface {
 	Find(map[string]interface{}) (*Session, rest_errors.RestErr)
 	ExpireToken(*Session) (bool, rest_errors.RestErr)
 	Update(*Session, *int64) (*Session, rest_errors.RestErr)
-	/*Find(map[string]interface{}) (*Token, rest_errors.RestErr)
-	ActiveSessionToken(int64) (*Token, rest_errors.RestErr) */
 }
 
 func NewSessionDao() SessionDao {
@@ -54,7 +52,7 @@ func (connection *sessionConnection) Create(payload *Session) (*Session, rest_er
 		if uniquenessViolation, constraintName := database.HasUniquenessViolation(row.Err()); uniquenessViolation {
 			return nil, rest_errors.InvalidError(ErrorMessage(constraintName))
 		}
-		return nil, rest_errors.NewInternalServerError("Server Error", row.Err())
+		return nil, rest_errors.NewInternalServerError(row.Err())
 	}
 
 	row.StructScan(session)
@@ -71,28 +69,11 @@ func (connection *sessionConnection) Update(payload *Session, sessionId *int64) 
 		if uniquenessViolation, constraintName := database.HasUniquenessViolation(row.Err()); uniquenessViolation {
 			return nil, rest_errors.InvalidError(ErrorMessage(constraintName))
 		}
-		return nil, rest_errors.NewInternalServerError("Server Error", row.Err())
+		return nil, rest_errors.NewInternalServerError(row.Err())
 	}
 	row.StructScan(session)
 	return session, nil
 }
-
-/*
-	func (connection *connection) ActiveSessionToken(userId int64) (*Token, rest_errors.RestErr) {
-		token := &Token{}
-		params := map[string]interface{}{
-			"user_id":         userId,
-			"expires_at__gte": time.Now(),
-		}
-		query := connection.sqlBuilder.SearchBy("tokens", params)
-		err := connection.db.Get(token, query)
-		if err != nil {
-			message := fmt.Sprintf("Failed to find active session for userId %v", userId)
-			return nil, rest_errors.NewNotFoundError(message)
-		}
-		return token, nil
-	}
-*/
 
 func (connection *sessionConnection) Find(params map[string]interface{}) (*Session, rest_errors.RestErr) {
 	session := &Session{}
@@ -119,7 +100,7 @@ func (connection *sessionConnection) ExpireToken(session *Session) (bool, rest_e
 		if uniquenessViolation, constraintName := database.HasUniquenessViolation(row.Err()); uniquenessViolation {
 			return true, rest_errors.InvalidError(ErrorMessage(constraintName))
 		}
-		return true, rest_errors.NewInternalServerError("Server Error", row.Err())
+		return true, rest_errors.NewInternalServerError(row.Err())
 	}
 
 	return true, nil

@@ -10,20 +10,19 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+type ValidationErrs map[string][]interface{}
 type RestErr interface {
 	Message() string
 	Status() int
 	Error() string
-	Causes() []interface{}
-	ValidationErrors() map[string][]interface{}
+	Causes() ValidationErrs
 }
 
 type restErr struct {
-	ErrMessage     string                   `json:"message"`
-	ErrStatus      int                      `json:"status"`
-	ErrError       string                   `json:"error"`
-	ErrCauses      []interface{}            `json:"causes"`
-	ErrValidations map[string][]interface{} `json:"validationErrors"`
+	ErrMessage string         `json:"message"`
+	ErrStatus  int            `json:"status"`
+	ErrError   string         `json:"error"`
+	ErrCauses  ValidationErrs `json:"causes"`
 }
 
 func (e restErr) Error() string {
@@ -39,37 +38,32 @@ func (e restErr) Status() int {
 	return e.ErrStatus
 }
 
-func (e restErr) Causes() []interface{} {
+func (e restErr) Causes() ValidationErrs {
 	return e.ErrCauses
 }
 
-func (e restErr) ValidationErrors() map[string][]interface{} {
-	return e.ErrValidations
-}
-
-func NewValidationError(message string, errs error) RestErr {
-
-	result := restErr{
-		ErrMessage: message,
+func NewValidationError(causes *ValidationErrs) RestErr {
+	return restErr{
+		ErrMessage: "Validation error",
 		ErrStatus:  http.StatusUnprocessableEntity,
 		ErrError:   "validation_error",
+		ErrCauses:  *causes,
 	}
-	var causes = map[string][]interface{}{}
+}
+
+func StructValidationErrors(errs error) *ValidationErrs {
+	causes := ValidationErrs{}
 	for _, err := range errs.(validator.ValidationErrors) {
 		causes[err.StructField()] = append(causes[err.StructField()], formattedValidationErrors(err))
 	}
-
-	result.ErrValidations = causes
-	return result
+	return &causes
 }
 
 func formattedValidationErrors(err validator.FieldError) interface{} {
 	switch err.ActualTag() {
 	case "required":
 		return map[string]interface{}{
-			"error":    "required",
-			"expected": err.Value(),
-			"provided": nil,
+			"error": "required",
 		}
 	case "email":
 		return map[string]interface{}{
@@ -94,13 +88,27 @@ func formattedValidationErrors(err validator.FieldError) interface{} {
 	}
 }
 
-func NewRestError(message string, status int, err string, causes []interface{}, validationErrs map[string][]interface{}) RestErr {
+func FormattedDbValidationError(attr string, constraint string) interface{} {
+	switch constraint {
+	case "uniqueness":
+		return map[string]interface{}{
+			"error": "must_be_unique",
+		}
+	case "not_found":
+		return map[string]interface{}{
+			"error": "record_not_found",
+		}
+	default:
+		return "validation_error"
+	}
+}
+
+func NewRestError(message string, status int, err string, causes ValidationErrs) RestErr {
 	return restErr{
-		ErrMessage:     message,
-		ErrStatus:      status,
-		ErrError:       err,
-		ErrCauses:      causes,
-		ErrValidations: validationErrs,
+		ErrMessage: message,
+		ErrStatus:  status,
+		ErrError:   err,
+		ErrCauses:  causes,
 	}
 }
 
@@ -144,14 +152,13 @@ func NewUnauthorizedError(message string) RestErr {
 	}
 }
 
-func NewInternalServerError(message string, err error) RestErr {
-	result := restErr{
-		ErrMessage: message,
+func NewInternalServerError(err error) RestErr {
+	if err != nil {
+		fmt.Println("Server Error: ", err)
+	}
+	return restErr{
+		ErrMessage: "Internal server error",
 		ErrStatus:  http.StatusInternalServerError,
 		ErrError:   "internal_server_error",
 	}
-	if err != nil {
-		result.ErrCauses = append(result.ErrCauses, err.Error())
-	}
-	return result
 }

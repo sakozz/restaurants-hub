@@ -39,8 +39,7 @@ func (ctr *adminRestaurantsHandler) Create(c *gin.Context) {
 	}
 
 	if err := Validate.Struct(newRestaurant); err != nil {
-
-		restErr := rest_errors.NewValidationError("Validation error", err)
+		restErr := rest_errors.NewValidationError(rest_errors.StructValidationErrors(err))
 		c.JSON(restErr.Status(), restErr)
 		return
 	}
