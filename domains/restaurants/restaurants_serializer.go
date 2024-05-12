@@ -19,6 +19,10 @@ func (record *Restaurant) Serialize(view ViewTypes) interface{} {
 		var adminListItem AdminListItem
 		json.Unmarshal(payload, &adminListItem)
 		return Payload[AdminListItem]{Id: record.Id, Type: "restaurants", Attributes: adminListItem}
+	case AdminDetails:
+		var details AdminDetailItem
+		json.Unmarshal(payload, &details)
+		return Payload[AdminDetailItem]{Id: record.Id, Type: "restaurants", Attributes: details}
 	default:
 		var adminListItem AdminListItem
 		json.Unmarshal(payload, &adminListItem)
