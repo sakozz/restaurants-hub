@@ -26,6 +26,8 @@ func mapRoutes() {
 	router.POST("/api/admin/restaurants", middleware.RequireAuth, adminRestaurantsHandler.Create)
 	router.GET("/api/admin/restaurants", middleware.RequireAuth, adminRestaurantsHandler.List)
 	router.GET("/api/admin/restaurants/:id", middleware.RequireAuth, adminRestaurantsHandler.Get)
+	router.PUT("/api/admin/restaurants/:id", middleware.RequireAuth, adminRestaurantsHandler.Update)
+	router.PATCH("/api/admin/restaurants/:id", middleware.RequireAuth, adminRestaurantsHandler.Update)
 	router.GET("/api/auth/:provider", ssoHandler.SsoLogin)
 	router.GET("/api/auth/:provider/callback", ssoHandler.Callback)
 	router.PUT("/api/auth/renew-session", middleware.RequireAuth, ssoHandler.RenewSession)

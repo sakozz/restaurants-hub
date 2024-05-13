@@ -5,7 +5,7 @@ CREATE TABLE
         id serial PRIMARY KEY,
         profile_id int NOT NULL,
         name VARCHAR(50) NOT NULL,
-        description VARCHAR(50) NOT NULL,
+        description VARCHAR(5000) NOT NULL,
         address JSONB DEFAULT '{}'::jsonb,
         email VARCHAR(50) UNIQUE NOT NULL,
         phone VARCHAR(20) UNIQUE NOT NULL,

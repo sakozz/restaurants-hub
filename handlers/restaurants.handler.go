@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +15,7 @@ type AdminRestaurantsHandler interface {
 	Create(c *gin.Context)
 	Get(c *gin.Context)
 	List(c *gin.Context)
+	Update(c *gin.Context)
 }
 
 type adminRestaurantsHandler struct {
@@ -66,6 +69,54 @@ func (ctr *adminRestaurantsHandler) Get(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, restaurant.Serialize(restaurants.AdminDetails))
+}
+
+func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
+	id, idErr := getIdFromUrl(c, false)
+	if idErr != nil {
+		c.JSON(idErr.Status(), idErr)
+		return
+	}
+
+	/* Check if restaurant exists with given Id */
+	record, getErr := ctr.dao.Get(&id)
+	if getErr != nil {
+		c.JSON(getErr.Status(), getErr)
+		return
+	}
+
+	/* Extract request body as map */
+	var mapBody map[string]interface{}
+	jsonData, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		restErr := rest_errors.NewBadRequestError("invalid json body")
+		c.JSON(restErr.Status(), restErr)
+		return
+	}
+
+	/* Validate required params and whitelisted payload data */
+	json.Unmarshal(jsonData, &mapBody)
+	payload := ctr.payload.SetData(mapBody)
+	payload.Permit(record.AdminUpdableAttributes())
+
+	/* Skip empty data and patch with only new data if the update is partial(PATCH) */
+	isPartial := c.Request.Method == http.MethodPatch
+	if isPartial {
+		payload.ClearEmpty()
+	}
+
+	/* Return error if payload has eroor for require/permit */
+	if len(payload.Errors) > 0 {
+		c.JSON(payload.Errors[0].Status(), payload.Errors)
+		return
+	}
+
+	result, updateErr := ctr.dao.Update(record, payload.Data)
+	if updateErr != nil {
+		c.JSON(updateErr.Status(), updateErr)
+		return
+	}
+	c.JSON(http.StatusOK, result.Serialize(restaurants.AdminDetails))
 }
 
 func (ctr *adminRestaurantsHandler) List(c *gin.Context) {

@@ -126,8 +126,7 @@ func (connection *connection) Where(params map[string]interface{}) (*User, rest_
 	err := connection.db.Get(user, query)
 	if err != nil {
 		fmt.Println("Error Occured:", err)
-		message := fmt.Sprintf("Sorry, user doesn't exist")
-		return nil, rest_errors.NewNotFoundError(message)
+		return nil, rest_errors.NewNotFoundError("Sorry, user doesn't exist")
 	}
 
 	return user, nil
