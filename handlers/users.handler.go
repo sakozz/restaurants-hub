@@ -14,6 +14,7 @@ import (
 type UsersHandler interface {
 	Update(c *gin.Context)
 	Get(c *gin.Context)
+	Profile(c *gin.Context)
 	List(c *gin.Context)
 }
 
@@ -37,6 +38,23 @@ func (ctr *usersHandler) Get(c *gin.Context) {
 	}
 
 	user, getErr := ctr.service.GetUser(userId)
+	if getErr != nil {
+		c.JSON(getErr.Status(), getErr)
+		return
+	}
+
+	c.JSON(http.StatusOK, user.Serialize(users.Admin))
+}
+
+func (ctr *usersHandler) Profile(c *gin.Context) {
+	session, ok := c.Get("currentSession")
+	if !ok {
+		restError := rest_errors.InvalidError("unauthorized")
+		c.JSON(restError.Status(), restError)
+		return
+	}
+
+	user, getErr := ctr.service.GetUser(session.(*users.Session).ProfileId)
 	if getErr != nil {
 		c.JSON(getErr.Status(), getErr)
 		return

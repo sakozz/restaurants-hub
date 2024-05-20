@@ -95,8 +95,10 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 		c.JSON(error.Status(), err)
 		return
 	}
-
-	c.JSON(http.StatusOK, user)
+	// Finally, we set the client cookie for "token"
+	// we also set an expiry time which is the same as the token itself
+	// c.SetCookie("restaurant-cookie", session.AccessToken, 2000, "/", "localhost", false, true)
+	c.JSON(http.StatusOK, session)
 }
 
 func (handler *ssoHandler) RenewSession(c *gin.Context) {

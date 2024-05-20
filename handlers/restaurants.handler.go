@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"resturants-hub.com/m/v2/domains/restaurants"
+	"resturants-hub.com/m/v2/jsonapi"
 	"resturants-hub.com/m/v2/services"
 	rest_errors "resturants-hub.com/m/v2/utils"
 )
@@ -51,8 +52,9 @@ func (ctr *adminRestaurantsHandler) Create(c *gin.Context) {
 		c.JSON(getErr.Status(), getErr)
 		return
 	}
-
-	c.JSON(http.StatusOK, restaurant.Serialize(restaurants.AdminList))
+	resource := restaurant.MemberFor(restaurants.AdminDetails)
+	jsonPayload := jsonapi.NewMemberSerializer[restaurants.AdminDetailItem](resource, nil, nil)
+	c.JSON(http.StatusOK, jsonPayload)
 }
 
 func (ctr *adminRestaurantsHandler) Get(c *gin.Context) {
@@ -68,7 +70,9 @@ func (ctr *adminRestaurantsHandler) Get(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, restaurant.Serialize(restaurants.AdminDetails))
+	resource := restaurant.MemberFor(restaurants.AdminDetails)
+	jsonapi := jsonapi.NewMemberSerializer[restaurants.AdminDetailItem](resource, nil, nil)
+	c.JSON(http.StatusOK, jsonapi)
 }
 
 func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
@@ -116,7 +120,10 @@ func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
 		c.JSON(updateErr.Status(), updateErr)
 		return
 	}
-	c.JSON(http.StatusOK, result.Serialize(restaurants.AdminDetails))
+
+	resource := result.MemberFor(restaurants.AdminDetails)
+	jsonPayload := jsonapi.NewMemberSerializer[restaurants.AdminDetailItem](resource, nil, nil)
+	c.JSON(http.StatusOK, jsonPayload)
 }
 
 func (ctr *adminRestaurantsHandler) List(c *gin.Context) {
@@ -126,5 +133,11 @@ func (ctr *adminRestaurantsHandler) List(c *gin.Context) {
 		c.JSON(err.Status(), err)
 		return
 	}
-	c.JSON(http.StatusOK, result.Serialize(restaurants.AdminList))
+	meta := map[string]interface{}{
+		"total": len(result),
+	}
+
+	collection := result.CollectionFor(restaurants.AdminList)
+	jsonapi := jsonapi.NewCollectionSerializer[restaurants.AdminListItem](collection, meta)
+	c.JSON(http.StatusOK, jsonapi)
 }

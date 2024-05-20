@@ -102,11 +102,6 @@ type OwnerDetailItem struct {
 type PayloadTypes interface {
 	AdminListItem | OwnerListItem | AdminDetailItem | OwnerDetailItem
 }
-type Payload[T PayloadTypes] struct {
-	Id         int64  `json:"id"`
-	Type       string `json:"type"`
-	Attributes T      `json:"attributes"`
-}
 
 func (restaurant *Restaurant) AdminUpdableAttributes() []string {
 	return []string{"profileId", "name", "description", "address", "email", "phone", "mobile", "website", "facebookLink", "instagramLink", "deletedAt"}

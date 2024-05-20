@@ -21,21 +21,30 @@ func mapRoutes() {
 			"content": "This is an index page...",
 		})
 	})
-	router.GET("/api/users", middleware.RequireAuth, usersHandler.List)
-	router.GET("/api/users/:id", middleware.RequireAuth, usersHandler.Get)
 
+	/* Admin routes */
 	adminRoutes := router.Group("/api/admin", middleware.RequireAuth)
 	{
+		/* Admin Restaurant routes */
 		adminRestaurantsRoutes := adminRoutes.Group("/restaurants")
 		adminRestaurantsRoutes.POST("/", adminRestaurantsHandler.Create)
 		adminRestaurantsRoutes.GET("/", adminRestaurantsHandler.List)
 		adminRestaurantsRoutes.GET("/:id", adminRestaurantsHandler.Get)
 		adminRestaurantsRoutes.PUT("/:id", adminRestaurantsHandler.Update)
 		adminRestaurantsRoutes.PATCH("/:id", adminRestaurantsHandler.Update)
+
+		adminUsersRoutes := adminRoutes.Group("/users")
+		adminUsersRoutes.GET("/", usersHandler.List)
+		adminUsersRoutes.GET("/profile", usersHandler.Profile)
+		adminUsersRoutes.GET("/:id", usersHandler.Get)
 	}
 
-	router.GET("/api/auth/:provider", ssoHandler.SsoLogin)
-	router.GET("/api/auth/:provider/callback", ssoHandler.Callback)
-	router.PUT("/api/auth/renew-session", middleware.RequireAuth, ssoHandler.RenewSession)
-	router.POST("/api/auth/logout", middleware.RequireAuth, ssoHandler.Logout)
+	/* Auth routes */
+	authRoutes := router.Group("/api/auth")
+	{
+		authRoutes.GET("/:provider", ssoHandler.SsoLogin)
+		authRoutes.GET("/:provider/callback", ssoHandler.Callback)
+		authRoutes.PUT("/renew-session", middleware.RequireAuth, ssoHandler.RenewSession)
+		authRoutes.POST("/logout", middleware.RequireAuth, ssoHandler.Logout)
+	}
 }
