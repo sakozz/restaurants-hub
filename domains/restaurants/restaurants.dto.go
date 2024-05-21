@@ -41,7 +41,7 @@ type CreateRestaurantPayload struct {
 	Phone         string                `json:"phone" db:"phone"`
 	Mobile        string                `json:"mobile" db:"mobile" goqu:"omitempty"`
 	Website       string                `json:"website" db:"website" goqu:"omitempty"`
-	FacebookLink  string                `json:"facebookLink" db:"facebook_ink" goqu:"omitempty"`
+	FacebookLink  string                `json:"facebookLink" db:"facebook_link" goqu:"omitempty"`
 	InstagramLink string                `json:"instagramLink" db:"instagram_link" goqu:"omitempty"`
 }
 

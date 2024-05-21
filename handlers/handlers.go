@@ -80,8 +80,15 @@ func (p *payloadHandler) ClearEmpty() {
 	}
 }
 
-func (p *payloadHandler) SetData(data map[string]interface{}) *payloadHandler {
-	p.Data = data
+func (p *payloadHandler) SetData(payload map[string]interface{}) *payloadHandler {
+	p.Errors = []rest_errors.RestErr{}
+	data := payload["data"].(map[string]interface{})
+	attributes := data["attributes"].(map[string]interface{})
+	if attributes == nil {
+		p.Errors = append(p.Errors, rest_errors.InvalidError("Attributes not found"))
+	}
+
+	p.Data = attributes
 	return p
 }
 

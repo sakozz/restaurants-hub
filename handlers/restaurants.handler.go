@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mitchellh/mapstructure"
 	"resturants-hub.com/m/v2/domains/restaurants"
 	"resturants-hub.com/m/v2/jsonapi"
 	"resturants-hub.com/m/v2/services"
@@ -34,12 +35,22 @@ func NewAdminRestaurantsHandler() AdminRestaurantsHandler {
 }
 
 func (ctr *adminRestaurantsHandler) Create(c *gin.Context) {
-	newRestaurant := &restaurants.CreateRestaurantPayload{}
-	if err := c.ShouldBindJSON(newRestaurant); err != nil {
+	/* Extract request body as map */
+	var mapBody map[string]interface{}
+	data, err := io.ReadAll(c.Request.Body)
+	if err != nil {
 		restErr := rest_errors.NewBadRequestError("invalid json body")
 		c.JSON(restErr.Status(), restErr)
 		return
 	}
+
+	/* extract data as json/map  */
+	json.Unmarshal(data, &mapBody)
+
+	/* Parse jsonapi payload and set attributes to data*/
+	payload := ctr.payload.SetData(mapBody)
+	newRestaurant := &restaurants.CreateRestaurantPayload{}
+	mapstructure.Decode(payload.Data, &newRestaurant)
 
 	if err := Validate.Struct(newRestaurant); err != nil {
 		restErr := rest_errors.NewValidationError(rest_errors.StructValidationErrors(err))
