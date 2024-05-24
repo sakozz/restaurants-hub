@@ -1,8 +1,9 @@
 package users
 
 import (
-	"database/sql"
 	"time"
+
+	"resturants-hub.com/m/v2/types"
 )
 
 // MARK: SsoUserInfo
@@ -16,22 +17,15 @@ type SsoUserInfo struct {
 }
 
 type User struct {
-	ID        int64        `json:"id" db:"id" goqu:"skipinsert"`
-	Email     string       `json:"email" db:"email"`
-	Role      string       `json:"role" goqu:"skipinsert"`
-	FirstName string       `json:"firstName" db:"first_name"`
-	LastName  string       `json:"lastName" db:"last_name"`
-	AvatarURL string       `json:"avatarUrl" db:"avatar_url"`
-	CreatedAt sql.NullTime `json:"createdAt" db:"created_at" goqu:"skipinsert"`
-	UpdatedAt time.Time    `json:"updatedAt" db:"updated_at" goqu:"skipinsert"`
-	DeletedAt sql.NullTime `json:"deletedAt" db:"deleted_at" goqu:"skipinsert"`
-}
-
-type SearchUserParams struct {
-	Id       int64  `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Status   string `json:"status"`
+	Id        int64          `json:"id" db:"id" goqu:"skipinsert"`
+	Email     string         `json:"email" db:"email"`
+	Role      string         `json:"role" goqu:"skipinsert"`
+	FirstName string         `json:"firstName" db:"first_name"`
+	LastName  string         `json:"lastName" db:"last_name"`
+	AvatarURL string         `json:"avatarUrl" db:"avatar_url"`
+	CreatedAt time.Time      `json:"createdAt" db:"created_at" goqu:"skipinsert"`
+	UpdatedAt time.Time      `json:"updatedAt" db:"updated_at" goqu:"skipinsert"`
+	DeletedAt types.NullTime `json:"deletedAt" db:"deleted_at" goqu:"skipinsert"`
 }
 
 type CreateUserPayload struct {
@@ -47,37 +41,34 @@ type LoginPayload struct {
 	Password string `json:"password"`
 }
 
-type PublicUser struct {
-	ID        int64  `json:"id"`
-	Email     string `json:"email"`
+type PublicListItem struct {
+	Id        int64  `json:"id"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	AvatarURL string `json:"avatarUrl"`
 }
-
-type PrivateUser struct {
-	ID        int64        `json:"id"`
-	Email     string       `json:"email"`
-	FirstName string       `json:"firstName"`
-	LastName  string       `json:"lastName"`
-	AvatarURL string       `json:"avatarUrl"`
-	CreatedAt sql.NullTime `json:"createdAt"`
-	UpdatedAt time.Time    `json:"updatedAt"`
-	DeletedAt sql.NullTime `json:"deletedAt"`
+type AdminListItem struct {
+	PublicListItem
+	Email string `json:"email"`
 }
 
-// MARK: PayloadTypes
-type PayloadTypes interface {
-	PublicUser | PrivateUser | SearchUserParams
+type AdminDetailItem struct {
+	AdminListItem
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt types.NullTime `json:"deletedAt"`
+}
+type OwnerDetailItem struct {
+	PublicListItem
+	Email string `json:"email"`
 }
 
-/* Data format for returning payload */
-// MARK: UserPayload
-type UserPayload[T PayloadTypes] struct {
-	Id         int64  `json:"id"`
-	Type       string `json:"type"`
-	Attributes T      `json:"attributes"`
-}
+const (
+	AdminList    ResponsePayloadType = 0
+	AdminDetails                     = 1
+	OwnerDetails                     = 2
+	PublicList                       = 3
+)
 
 type Users []User
-type AuthType int64
+type ResponsePayloadType int64

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	data "resturants-hub.com/m/v2/data_types"
+	data "resturants-hub.com/m/v2/types"
 )
 
 // DB representation of the restaurant table

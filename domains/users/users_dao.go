@@ -32,12 +32,6 @@ func NewUserDao() UsersDao {
 	}
 }
 
-const (
-	Admin     AuthType = 0
-	OwnerUser          = 1
-	Public             = 2
-)
-
 func (user *User) UpdableAttributes() []string {
 	return []string{"email", "username"}
 }
@@ -94,7 +88,7 @@ func (connection *connection) FindOrCreate(userData *User) (*User, rest_errors.R
 }
 
 func (connection *connection) Update(user *User, payload interface{}) (*User, rest_errors.RestErr) {
-	sqlQuery := connection.sqlBuilder.Update("profiles", &user.ID, payload)
+	sqlQuery := connection.sqlBuilder.Update("profiles", &user.Id, payload)
 	row := connection.db.QueryRowx(sqlQuery)
 	if row.Err() != nil {
 		if uniquenessViolation, constraintName := database.HasUniquenessViolation(row.Err()); uniquenessViolation {

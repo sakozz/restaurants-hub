@@ -1,6 +1,7 @@
-package data
+package types
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
@@ -28,4 +29,29 @@ func (j *JsonMap[T]) Scan(src interface{}) error {
 
 func (j JsonMap[T]) Value() (driver.Value, error) {
 	return json.Marshal(j)
+}
+
+type NullTime struct {
+	sql.NullTime
+}
+
+func (nt NullTime) MarshalJSON() ([]byte, error) {
+	if nt.Valid {
+		return json.Marshal(nt.NullTime.Time)
+	}
+	return json.Marshal(nil)
+}
+
+func (nt *NullTime) UnmarshalJSON(data []byte) error {
+	var t *sql.NullTime
+	if err := json.Unmarshal(data, &t); err != nil {
+		return err
+	}
+	if t != nil {
+		nt.Valid = true
+		nt.NullTime = *t
+	} else {
+		nt.Valid = false
+	}
+	return nil
 }

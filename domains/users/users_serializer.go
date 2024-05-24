@@ -2,34 +2,39 @@ package users
 
 import (
 	"encoding/json"
+
+	"resturants-hub.com/m/v2/jsonapi"
 )
 
-func (users Users) Serialize(authType AuthType) []interface{} {
+func (user *User) MemberFor(payloadType ResponsePayloadType) interface{} {
+	payload, _ := json.Marshal(user)
+	switch payloadType {
+
+	case AdminDetails:
+		var details AdminDetailItem
+		json.Unmarshal(payload, &details)
+		return jsonapi.MemberPayload[AdminDetailItem]{Id: user.Id, Type: "users", Attributes: details}
+	default:
+		var details OwnerDetailItem
+		json.Unmarshal(payload, &details)
+		return jsonapi.MemberPayload[OwnerDetailItem]{Id: user.Id, Type: "users", Attributes: details}
+	}
+}
+
+func (users Users) CollectionFor(payloadType ResponsePayloadType) []interface{} {
 	result := make([]interface{}, len(users))
-	for index, user := range users {
-		result[index] = user.Serialize(authType)
+	for index, record := range users {
+		payload, _ := json.Marshal(record)
+		switch payloadType {
+		case AdminList:
+			var adminListItem AdminListItem
+			json.Unmarshal(payload, &adminListItem)
+			result[index] = jsonapi.MemberPayload[AdminListItem]{Id: record.Id, Type: "users", Attributes: adminListItem}
+		default:
+			var publicListItem PublicListItem
+			json.Unmarshal(payload, &publicListItem)
+			result[index] = jsonapi.MemberPayload[PublicListItem]{Id: record.Id, Type: "users", Attributes: publicListItem}
+		}
 	}
 	return result
-}
-
-func (user *User) Serialize(authType AuthType) interface{} {
-	if authType == Admin {
-		return UserPayload[PrivateUser]{Id: user.ID, Type: "users", Attributes: user.AsPrivate()}
-	} else {
-		return UserPayload[PublicUser]{Id: user.ID, Type: "users", Attributes: user.AsPublic()}
-	}
-}
-
-func (user *User) AsPublic() PublicUser {
-	userJson, _ := json.Marshal(user)
-	var publicUser PublicUser
-	json.Unmarshal(userJson, &publicUser)
-	return publicUser
-}
-
-func (user *User) AsPrivate() PrivateUser {
-	userJson, _ := json.Marshal(user)
-	var privateUser PrivateUser
-	json.Unmarshal(userJson, &privateUser)
-	return privateUser
 }
