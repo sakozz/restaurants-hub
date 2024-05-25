@@ -152,6 +152,14 @@ func NewUnauthorizedError(message string) RestErr {
 	}
 }
 
+func NewForbiddenError(message string) RestErr {
+	return restErr{
+		ErrMessage: message,
+		ErrStatus:  http.StatusForbidden,
+		ErrError:   "unauthorized",
+	}
+}
+
 func NewInternalServerError(err error) RestErr {
 	if err != nil {
 		fmt.Println("Server Error: ", err)

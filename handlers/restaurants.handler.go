@@ -8,9 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/mapstructure"
 	"resturants-hub.com/m/v2/domains/restaurants"
+	"resturants-hub.com/m/v2/domains/users"
 	"resturants-hub.com/m/v2/jsonapi"
+	rest_errors "resturants-hub.com/m/v2/packages/utils"
 	"resturants-hub.com/m/v2/services"
-	rest_errors "resturants-hub.com/m/v2/utils"
 )
 
 type AdminRestaurantsHandler interface {
@@ -139,7 +140,13 @@ func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
 
 func (ctr *adminRestaurantsHandler) List(c *gin.Context) {
 	params := WhitelistQueryParams(c, []string{"profile_id", "name", "email", "phone"})
-	result, err := ctr.dao.Search(params)
+	user, ok := c.Get("currentUser")
+	if !ok {
+		restError := rest_errors.NewUnauthorizedError("unauthorized")
+		c.JSON(restError.Status(), restError)
+		return
+	}
+	result, err := ctr.dao.AuthorizedCollection(params, user.(*users.User))
 	if err != nil {
 		c.JSON(err.Status(), err)
 		return

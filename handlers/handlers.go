@@ -28,7 +28,7 @@ func NewParamsHandler() RequestPayload {
 }
 
 func WhitelistQueryParams(c *gin.Context, allowdKeys []string) url.Values {
-	allowdKeys = append(allowdKeys, []string{"page", "sort"}...)
+	allowdKeys = append(allowdKeys, []string{"page", "sort", "size"}...)
 	params := c.Request.URL.Query()
 	for key, _ := range params {
 		attr := strings.Split(key, "__")[0]

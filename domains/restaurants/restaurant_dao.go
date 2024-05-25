@@ -7,7 +7,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/mitchellh/mapstructure"
 	"resturants-hub.com/m/v2/database"
-	rest_errors "resturants-hub.com/m/v2/utils"
+	"resturants-hub.com/m/v2/domains/users"
+	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
 type connection struct {
@@ -18,6 +19,7 @@ type connection struct {
 type RestaurantDao interface {
 	Create(*CreateRestaurantPayload) (*Restaurant, rest_errors.RestErr)
 	Search(url.Values) (Restaurants, rest_errors.RestErr)
+	AuthorizedCollection(url.Values, *users.User) (Restaurants, rest_errors.RestErr)
 	Get(id *int64) (*Restaurant, rest_errors.RestErr)
 	Update(*Restaurant, interface{}) (*Restaurant, rest_errors.RestErr)
 }
@@ -66,6 +68,18 @@ func (connection *connection) Search(params url.Values) (Restaurants, rest_error
 	}
 
 	return restaurants, nil
+}
+
+func (connection *connection) AuthorizedCollection(params url.Values, user *users.User) (Restaurants, rest_errors.RestErr) {
+	switch user.Role {
+	case users.Admin:
+		return connection.Search(params)
+	case users.Manager:
+		params.Add("profile_id", fmt.Sprint(user.Id))
+		return connection.Search(params)
+	default:
+		return nil, rest_errors.NewForbiddenError("You are not authorized to view this resource")
+	}
 }
 
 func (connection *connection) Update(restaurant *Restaurant, payload interface{}) (*Restaurant, rest_errors.RestErr) {

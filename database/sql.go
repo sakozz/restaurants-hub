@@ -7,6 +7,7 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
 	"golang.org/x/exp/constraints"
+	pagination "resturants-hub.com/m/v2/packages"
 )
 
 type DataValue interface {
@@ -46,9 +47,10 @@ func (builder *sqlBuilder) Filter(tableName string, params url.Values) string {
 	for key, value := range params {
 		query[key] = value
 	}
+	meta := pagination.Pagination{Params: query}
 
 	exp := filtersToSql(query)
-	sql, _, _ := goqu.From(tableName).Where(exp).ToSQL()
+	sql, _, _ := goqu.From(tableName).Where(exp).Limit(meta.Size()).Offset(meta.Offset()).ToSQL()
 	return sql
 }
 
@@ -79,6 +81,9 @@ func filtersToSql(params map[string]interface{}) exp.Ex {
 	}
 
 	for key, value := range params {
+		if key == "size" || key == "page" || key == "sort" {
+			continue
+		}
 		splits := strings.Split(key, "__")
 		attr := splits[0]
 		if len(splits) > 1 {
