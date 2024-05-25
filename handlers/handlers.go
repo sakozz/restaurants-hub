@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"golang.org/x/exp/slices"
-	rest_errors "resturants-hub.com/m/v2/utils"
+	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
 type RequestPayload interface {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"resturants-hub.com/m/v2/domains/users"
-	rest_errors "resturants-hub.com/m/v2/utils"
+	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
 var JwtLifeSpan int = 5 * 60 // 5 minutes

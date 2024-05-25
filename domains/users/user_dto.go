@@ -3,7 +3,7 @@ package users
 import (
 	"time"
 
-	"resturants-hub.com/m/v2/types"
+	"resturants-hub.com/m/v2/packages/types"
 )
 
 // MARK: SsoUserInfo
@@ -19,7 +19,7 @@ type SsoUserInfo struct {
 type User struct {
 	Id        int64          `json:"id" db:"id" goqu:"skipinsert"`
 	Email     string         `json:"email" db:"email"`
-	Role      string         `json:"role" goqu:"skipinsert"`
+	Role      Role           `json:"role" goqu:"skipinsert"`
 	FirstName string         `json:"firstName" db:"first_name"`
 	LastName  string         `json:"lastName" db:"last_name"`
 	AvatarURL string         `json:"avatarUrl" db:"avatar_url"`
@@ -54,6 +54,7 @@ type AdminListItem struct {
 
 type AdminDetailItem struct {
 	AdminListItem
+	Role      Role           `json:"role"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt types.NullTime `json:"deletedAt"`
@@ -72,3 +73,12 @@ const (
 
 type Users []User
 type ResponsePayloadType int64
+
+type Role string
+
+// Declare related constants for each direction starting with index 1
+const (
+	Admin   Role = "admin"
+	Manager      = "manager"
+	Public       = "public"
+)

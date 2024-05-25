@@ -7,7 +7,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"resturants-hub.com/m/v2/database"
-	rest_errors "resturants-hub.com/m/v2/utils"
+	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
 // MARK: UsersDao

@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"resturants-hub.com/m/v2/domains/users"
 	"resturants-hub.com/m/v2/jsonapi"
+	rest_errors "resturants-hub.com/m/v2/packages/utils"
 	"resturants-hub.com/m/v2/services"
-	rest_errors "resturants-hub.com/m/v2/utils"
 )
 
 type UsersHandler interface {

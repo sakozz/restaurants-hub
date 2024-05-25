@@ -12,8 +12,8 @@ import (
 	"golang.org/x/oauth2"
 	"resturants-hub.com/m/v2/domains/sso"
 	"resturants-hub.com/m/v2/domains/users"
+	rest_errors "resturants-hub.com/m/v2/packages/utils"
 	"resturants-hub.com/m/v2/services"
-	rest_errors "resturants-hub.com/m/v2/utils"
 )
 
 type SsoHandler interface {
@@ -64,14 +64,14 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 
 	token, err := sso.GoogleSsoConfig.Exchange(ctx, code, oauth2.VerifierOption(verifier))
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error on SSO token exchange:", err)
 	}
 
 	// Retrieve user data by token
 	client := sso.GoogleSsoConfig.Client(c, token)
 	userData, err := handler.RetrieveUserInfo(client, token.AccessToken)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Retrieve user error:", err)
 	}
 
 	user, restErr := handler.usersDao.FindOrCreate(userData)

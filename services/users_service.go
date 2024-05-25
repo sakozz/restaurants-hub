@@ -4,7 +4,7 @@ import (
 	"net/url"
 
 	"resturants-hub.com/m/v2/domains/users"
-	rest_errors "resturants-hub.com/m/v2/utils"
+	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
 // var (
