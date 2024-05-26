@@ -10,6 +10,7 @@ import (
 	"resturants-hub.com/m/v2/domains/restaurants"
 	"resturants-hub.com/m/v2/domains/users"
 	"resturants-hub.com/m/v2/jsonapi"
+	consts "resturants-hub.com/m/v2/packages/const"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 	"resturants-hub.com/m/v2/services"
 )
@@ -22,9 +23,10 @@ type AdminRestaurantsHandler interface {
 }
 
 type adminRestaurantsHandler struct {
-	service services.UsersService
-	dao     restaurants.RestaurantDao
-	payload RequestPayload
+	service     services.UsersService
+	dao         restaurants.RestaurantDao
+	payload     RequestPayload
+	currentUser *users.User
 }
 
 func NewAdminRestaurantsHandler() AdminRestaurantsHandler {
@@ -36,6 +38,12 @@ func NewAdminRestaurantsHandler() AdminRestaurantsHandler {
 }
 
 func (ctr *adminRestaurantsHandler) Create(c *gin.Context) {
+	/* Authorize request for current user */
+	if ok, restErr := ctr.authorize("create", c); !ok {
+		c.JSON(restErr.Status(), restErr)
+		return
+	}
+
 	/* Extract request body as map */
 	var mapBody map[string]interface{}
 	data, err := io.ReadAll(c.Request.Body)
@@ -70,6 +78,10 @@ func (ctr *adminRestaurantsHandler) Create(c *gin.Context) {
 }
 
 func (ctr *adminRestaurantsHandler) Get(c *gin.Context) {
+	if ok, restErr := ctr.authorize("access", c); !ok {
+		c.JSON(restErr.Status(), restErr)
+		return
+	}
 	id, idErr := getIdFromUrl(c, false)
 	if idErr != nil {
 		c.JSON(idErr.Status(), idErr)
@@ -88,6 +100,12 @@ func (ctr *adminRestaurantsHandler) Get(c *gin.Context) {
 }
 
 func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
+	/* Authorize request for current user */
+	if ok, restErr := ctr.authorize("update", c); !ok {
+		c.JSON(restErr.Status(), restErr)
+		return
+	}
+
 	id, idErr := getIdFromUrl(c, false)
 	if idErr != nil {
 		c.JSON(idErr.Status(), idErr)
@@ -139,14 +157,16 @@ func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
 }
 
 func (ctr *adminRestaurantsHandler) List(c *gin.Context) {
-	params := WhitelistQueryParams(c, []string{"profile_id", "name", "email", "phone"})
-	user, ok := c.Get("currentUser")
-	if !ok {
-		restError := rest_errors.NewUnauthorizedError("unauthorized")
-		c.JSON(restError.Status(), restError)
+	/* Authorize request for current user */
+	if ok, restErr := ctr.authorize("accessCollection", c); !ok {
+		c.JSON(restErr.Status(), restErr)
 		return
 	}
-	result, err := ctr.dao.AuthorizedCollection(params, user.(*users.User))
+
+	params := WhitelistQueryParams(c, []string{"profile_id", "name", "email", "phone"})
+
+	// Get authorized collection of restaurants
+	result, err := ctr.dao.AuthorizedCollection(params, ctr.currentUser)
 	if err != nil {
 		c.JSON(err.Status(), err)
 		return
@@ -158,4 +178,18 @@ func (ctr *adminRestaurantsHandler) List(c *gin.Context) {
 	collection := result.CollectionFor(restaurants.AdminList)
 	jsonapi := jsonapi.NewCollectionSerializer[restaurants.AdminListItem](collection, meta)
 	c.JSON(http.StatusOK, jsonapi)
+}
+
+func (ctr *adminRestaurantsHandler) authorize(action string, c *gin.Context) (bool, rest_errors.RestErr) {
+
+	// Get current user from context
+	userData, ok := c.Get("currentUser")
+	if !ok {
+		return false, rest_errors.NewUnauthorizedError("unauthorized")
+	}
+
+	ctr.currentUser = userData.(*users.User)
+
+	// Check if user is authorized to access the resource
+	return ctr.currentUser.Can(action, consts.Restaurants)
 }

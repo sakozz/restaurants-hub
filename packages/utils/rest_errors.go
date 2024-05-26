@@ -156,7 +156,7 @@ func NewForbiddenError(message string) RestErr {
 	return restErr{
 		ErrMessage: message,
 		ErrStatus:  http.StatusForbidden,
-		ErrError:   "unauthorized",
+		ErrError:   "forbidden",
 	}
 }
 

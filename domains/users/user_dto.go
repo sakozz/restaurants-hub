@@ -3,6 +3,7 @@ package users
 import (
 	"time"
 
+	consts "resturants-hub.com/m/v2/packages/const"
 	"resturants-hub.com/m/v2/packages/types"
 )
 
@@ -19,7 +20,7 @@ type SsoUserInfo struct {
 type User struct {
 	Id        int64          `json:"id" db:"id" goqu:"skipinsert"`
 	Email     string         `json:"email" db:"email"`
-	Role      Role           `json:"role" goqu:"skipinsert"`
+	Role      consts.Role    `json:"role" goqu:"skipinsert"`
 	FirstName string         `json:"firstName" db:"first_name"`
 	LastName  string         `json:"lastName" db:"last_name"`
 	AvatarURL string         `json:"avatarUrl" db:"avatar_url"`
@@ -54,7 +55,7 @@ type AdminListItem struct {
 
 type AdminDetailItem struct {
 	AdminListItem
-	Role      Role           `json:"role"`
+	Role      consts.Role    `json:"role"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt types.NullTime `json:"deletedAt"`
@@ -73,12 +74,3 @@ const (
 
 type Users []User
 type ResponsePayloadType int64
-
-type Role string
-
-// Declare related constants for each direction starting with index 1
-const (
-	Admin   Role = "admin"
-	Manager      = "manager"
-	Public       = "public"
-)

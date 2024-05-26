@@ -8,6 +8,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"resturants-hub.com/m/v2/database"
 	"resturants-hub.com/m/v2/domains/users"
+	consts "resturants-hub.com/m/v2/packages/const"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
@@ -72,9 +73,9 @@ func (connection *connection) Search(params url.Values) (Restaurants, rest_error
 
 func (connection *connection) AuthorizedCollection(params url.Values, user *users.User) (Restaurants, rest_errors.RestErr) {
 	switch user.Role {
-	case users.Admin:
+	case consts.Admin:
 		return connection.Search(params)
-	case users.Manager:
+	case consts.Manager:
 		params.Add("profile_id", fmt.Sprint(user.Id))
 		return connection.Search(params)
 	default:
