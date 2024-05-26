@@ -4,9 +4,8 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"resturants-hub.com/m/v2/domains/sessions"
 	"resturants-hub.com/m/v2/domains/users"
-	"resturants-hub.com/m/v2/services"
-
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
@@ -20,7 +19,7 @@ func RequireAuth(c *gin.Context) {
 	}
 
 	/* Validate  */
-	sessionService := services.NewSessionService()
+	sessionService := sessions.NewSessionService()
 	session, restErr := sessionService.ValidateSessionToken(tokenString)
 	if restErr != nil {
 		c.AbortWithStatusJSON(restErr.Status(), restErr)

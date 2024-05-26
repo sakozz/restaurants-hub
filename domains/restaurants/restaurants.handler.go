@@ -1,4 +1,4 @@
-package handlers
+package restaurants
 
 import (
 	"encoding/json"
@@ -7,12 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/mapstructure"
-	"resturants-hub.com/m/v2/domains/restaurants"
 	"resturants-hub.com/m/v2/domains/users"
 	"resturants-hub.com/m/v2/jsonapi"
-	consts "resturants-hub.com/m/v2/packages/const"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
-	"resturants-hub.com/m/v2/services"
 )
 
 type AdminRestaurantsHandler interface {
@@ -23,23 +20,21 @@ type AdminRestaurantsHandler interface {
 }
 
 type adminRestaurantsHandler struct {
-	service     services.UsersService
-	dao         restaurants.RestaurantDao
-	payload     RequestPayload
+	dao         RestaurantDao
+	payload     jsonapi.RequestPayload
 	currentUser *users.User
 }
 
 func NewAdminRestaurantsHandler() AdminRestaurantsHandler {
 	return &adminRestaurantsHandler{
-		service: services.NewUsersService(),
-		dao:     restaurants.NewRestaurantDao(),
-		payload: NewParamsHandler(),
+		dao:     NewRestaurantDao(),
+		payload: jsonapi.NewParamsHandler(),
 	}
 }
 
 func (ctr *adminRestaurantsHandler) Create(c *gin.Context) {
 	/* Authorize request for current user */
-	if ok, restErr := ctr.authorize("create", c); !ok {
+	if ok, restErr := ctr.Authorize("create", c); !ok {
 		c.JSON(restErr.Status(), restErr)
 		return
 	}
@@ -58,10 +53,10 @@ func (ctr *adminRestaurantsHandler) Create(c *gin.Context) {
 
 	/* Parse jsonapi payload and set attributes to data*/
 	payload := ctr.payload.SetData(mapBody)
-	newRestaurant := &restaurants.CreateRestaurantPayload{}
+	newRestaurant := &CreateRestaurantPayload{}
 	mapstructure.Decode(payload.Data, &newRestaurant)
 
-	if err := Validate.Struct(newRestaurant); err != nil {
+	if err := jsonapi.Validate.Struct(newRestaurant); err != nil {
 		restErr := rest_errors.NewValidationError(rest_errors.StructValidationErrors(err))
 		c.JSON(restErr.Status(), restErr)
 		return
@@ -72,17 +67,17 @@ func (ctr *adminRestaurantsHandler) Create(c *gin.Context) {
 		c.JSON(getErr.Status(), getErr)
 		return
 	}
-	resource := restaurant.MemberFor(restaurants.AdminDetails)
-	jsonPayload := jsonapi.NewMemberSerializer[restaurants.AdminDetailItem](resource, nil, nil)
+	resource := restaurant.MemberFor(AdminDetails)
+	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil)
 	c.JSON(http.StatusOK, jsonPayload)
 }
 
 func (ctr *adminRestaurantsHandler) Get(c *gin.Context) {
-	if ok, restErr := ctr.authorize("access", c); !ok {
+	if ok, restErr := ctr.Authorize("access", c); !ok {
 		c.JSON(restErr.Status(), restErr)
 		return
 	}
-	id, idErr := getIdFromUrl(c, false)
+	id, idErr := jsonapi.GetIdFromUrl(c, false)
 	if idErr != nil {
 		c.JSON(idErr.Status(), idErr)
 		return
@@ -94,19 +89,19 @@ func (ctr *adminRestaurantsHandler) Get(c *gin.Context) {
 		return
 	}
 
-	resource := restaurant.MemberFor(restaurants.AdminDetails)
-	jsonapi := jsonapi.NewMemberSerializer[restaurants.AdminDetailItem](resource, nil, nil)
+	resource := restaurant.MemberFor(AdminDetails)
+	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil)
 	c.JSON(http.StatusOK, jsonapi)
 }
 
 func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
 	/* Authorize request for current user */
-	if ok, restErr := ctr.authorize("update", c); !ok {
+	if ok, restErr := ctr.Authorize("update", c); !ok {
 		c.JSON(restErr.Status(), restErr)
 		return
 	}
 
-	id, idErr := getIdFromUrl(c, false)
+	id, idErr := jsonapi.GetIdFromUrl(c, false)
 	if idErr != nil {
 		c.JSON(idErr.Status(), idErr)
 		return
@@ -151,19 +146,19 @@ func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
 		return
 	}
 
-	resource := result.MemberFor(restaurants.AdminDetails)
-	jsonPayload := jsonapi.NewMemberSerializer[restaurants.AdminDetailItem](resource, nil, nil)
+	resource := result.MemberFor(AdminDetails)
+	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil)
 	c.JSON(http.StatusOK, jsonPayload)
 }
 
 func (ctr *adminRestaurantsHandler) List(c *gin.Context) {
 	/* Authorize request for current user */
-	if ok, restErr := ctr.authorize("accessCollection", c); !ok {
+	if ok, restErr := ctr.Authorize("accessCollection", c); !ok {
 		c.JSON(restErr.Status(), restErr)
 		return
 	}
 
-	params := WhitelistQueryParams(c, []string{"profile_id", "name", "email", "phone"})
+	params := jsonapi.WhitelistQueryParams(c, []string{"profile_id", "name", "email", "phone"})
 
 	// Get authorized collection of restaurants
 	result, err := ctr.dao.AuthorizedCollection(params, ctr.currentUser)
@@ -175,11 +170,12 @@ func (ctr *adminRestaurantsHandler) List(c *gin.Context) {
 		"total": len(result),
 	}
 
-	collection := result.CollectionFor(restaurants.AdminList)
-	jsonapi := jsonapi.NewCollectionSerializer[restaurants.AdminListItem](collection, meta)
+	collection := result.CollectionFor(AdminList)
+	jsonapi := jsonapi.NewCollectionSerializer[AdminListItem](collection, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
 
+/*
 func (ctr *adminRestaurantsHandler) authorize(action string, c *gin.Context) (bool, rest_errors.RestErr) {
 
 	// Get current user from context
@@ -192,4 +188,4 @@ func (ctr *adminRestaurantsHandler) authorize(action string, c *gin.Context) (bo
 
 	// Check if user is authorized to access the resource
 	return ctr.currentUser.Can(action, consts.Restaurants)
-}
+} */

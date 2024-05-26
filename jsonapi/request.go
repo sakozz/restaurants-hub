@@ -1,4 +1,4 @@
-package handlers
+package jsonapi
 
 import (
 	"fmt"
@@ -40,7 +40,7 @@ func WhitelistQueryParams(c *gin.Context, allowdKeys []string) url.Values {
 	return params
 }
 
-func getIdFromUrl(c *gin.Context, fromQuery bool) (int64, rest_errors.RestErr) {
+func GetIdFromUrl(c *gin.Context, fromQuery bool) (int64, rest_errors.RestErr) {
 	paramId := c.Param("id")
 	if fromQuery {
 		paramId = c.Query("id")

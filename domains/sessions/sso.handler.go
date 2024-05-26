@@ -1,4 +1,4 @@
-package handlers
+package sessions
 
 import (
 	"context"
@@ -13,7 +13,6 @@ import (
 	"resturants-hub.com/m/v2/domains/sso"
 	"resturants-hub.com/m/v2/domains/users"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
-	"resturants-hub.com/m/v2/services"
 )
 
 type SsoHandler interface {
@@ -24,14 +23,13 @@ type SsoHandler interface {
 }
 
 type ssoHandler struct {
-	service  services.SessionService
+	service  SessionService
 	usersDao users.UsersDao
-	/*payload RequestPayload */
 }
 
 func NewSsoHandler() SsoHandler {
 	return &ssoHandler{
-		service:  services.NewSessionService(),
+		service:  NewSessionService(),
 		usersDao: users.NewUserDao(),
 	}
 }

@@ -4,14 +4,16 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"resturants-hub.com/m/v2/handlers"
+	"resturants-hub.com/m/v2/domains/restaurants"
+	"resturants-hub.com/m/v2/domains/sessions"
+	"resturants-hub.com/m/v2/domains/users"
 	"resturants-hub.com/m/v2/middleware"
 )
 
 var (
-	ssoHandler              handlers.SsoHandler              = handlers.NewSsoHandler()
-	usersHandler            handlers.UsersHandler            = handlers.NewUsersHandler()
-	adminRestaurantsHandler handlers.AdminRestaurantsHandler = handlers.NewAdminRestaurantsHandler()
+	ssoHandler              sessions.SsoHandler                 = sessions.NewSsoHandler()
+	usersHandler            users.UsersHandler                  = users.NewUsersHandler()
+	adminRestaurantsHandler restaurants.AdminRestaurantsHandler = restaurants.NewAdminRestaurantsHandler()
 )
 
 func mapRoutes() {

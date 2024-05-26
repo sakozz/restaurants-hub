@@ -1,4 +1,4 @@
-package handlers
+package users
 
 import (
 	"encoding/json"
@@ -6,10 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"resturants-hub.com/m/v2/domains/users"
 	"resturants-hub.com/m/v2/jsonapi"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
-	"resturants-hub.com/m/v2/services"
 )
 
 type UsersHandler interface {
@@ -20,19 +18,19 @@ type UsersHandler interface {
 }
 
 type usersHandler struct {
-	service services.UsersService
-	payload RequestPayload
+	service UsersService
+	payload jsonapi.RequestPayload
 }
 
 func NewUsersHandler() UsersHandler {
 	return &usersHandler{
-		service: services.NewUsersService(),
-		payload: NewParamsHandler(),
+		service: NewUsersService(),
+		payload: jsonapi.NewParamsHandler(),
 	}
 }
 
 func (ctr *usersHandler) Get(c *gin.Context) {
-	userId, idErr := getIdFromUrl(c, false)
+	userId, idErr := jsonapi.GetIdFromUrl(c, false)
 	if idErr != nil {
 		c.JSON(idErr.Status(), idErr)
 		return
@@ -44,8 +42,8 @@ func (ctr *usersHandler) Get(c *gin.Context) {
 		return
 	}
 
-	resource := user.MemberFor(users.AdminDetails)
-	jsonapi := jsonapi.NewMemberSerializer[users.AdminDetailItem](resource, nil, nil)
+	resource := user.MemberFor(AdminDetails)
+	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil)
 	c.JSON(http.StatusOK, jsonapi)
 
 }
@@ -58,19 +56,19 @@ func (ctr *usersHandler) Profile(c *gin.Context) {
 		return
 	}
 
-	user, getErr := ctr.service.GetUser(session.(*users.Session).ProfileId)
+	user, getErr := ctr.service.GetUser(session.(*Session).ProfileId)
 	if getErr != nil {
 		c.JSON(getErr.Status(), getErr)
 		return
 	}
 
-	resource := user.MemberFor(users.OwnerDetails)
-	jsonapi := jsonapi.NewMemberSerializer[users.OwnerDetailItem](resource, nil, nil)
+	resource := user.MemberFor(OwnerDetails)
+	jsonapi := jsonapi.NewMemberSerializer[OwnerDetailItem](resource, nil, nil)
 	c.JSON(http.StatusOK, jsonapi)
 }
 
 func (ctr *usersHandler) Update(c *gin.Context) {
-	userId, idErr := getIdFromUrl(c, false)
+	userId, idErr := jsonapi.GetIdFromUrl(c, false)
 	if idErr != nil {
 		c.JSON(idErr.Status(), idErr)
 		return
@@ -115,8 +113,8 @@ func (ctr *usersHandler) Update(c *gin.Context) {
 		return
 	}
 
-	resource := updatedUser.MemberFor(users.OwnerDetails)
-	jsonapi := jsonapi.NewMemberSerializer[users.AdminDetailItem](resource, nil, nil)
+	resource := updatedUser.MemberFor(OwnerDetails)
+	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil)
 	c.JSON(http.StatusOK, jsonapi)
 }
 
@@ -135,7 +133,7 @@ func (ctr *usersHandler) Delete(c *gin.Context) {
 }
 
 func (ctr *usersHandler) List(c *gin.Context) {
-	params := WhitelistQueryParams(c, []string{"first_name", "email", "id", "last_name"})
+	params := jsonapi.WhitelistQueryParams(c, []string{"first_name", "email", "id", "last_name"})
 	result, err := ctr.service.SearchUser(params)
 	if err != nil {
 		c.JSON(err.Status(), err)
@@ -146,7 +144,7 @@ func (ctr *usersHandler) List(c *gin.Context) {
 		"total": len(result),
 	}
 
-	collection := result.CollectionFor(users.AdminList)
-	jsonapi := jsonapi.NewCollectionSerializer[users.AdminListItem](collection, meta)
+	collection := result.CollectionFor(AdminList)
+	jsonapi := jsonapi.NewCollectionSerializer[AdminListItem](collection, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
