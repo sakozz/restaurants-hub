@@ -95,12 +95,3 @@ func (p *payloadHandler) SetData(payload map[string]interface{}) *payloadHandler
 var (
 	Validate = validator.New(validator.WithRequiredStructEnabled())
 )
-
-/* func buildUpdatePayload(isPartialUpdat bool, payload interface{}) interface{} {
-
-	result := make([]interface{}, len(users))
-	for index, user := range users {
-		result[index] = user.Serialize(authType)
-	}
-	return result
-} */

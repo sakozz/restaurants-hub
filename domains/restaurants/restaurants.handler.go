@@ -174,18 +174,3 @@ func (ctr *adminRestaurantsHandler) List(c *gin.Context) {
 	jsonapi := jsonapi.NewCollectionSerializer[AdminListItem](collection, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
-
-/*
-func (ctr *adminRestaurantsHandler) authorize(action string, c *gin.Context) (bool, rest_errors.RestErr) {
-
-	// Get current user from context
-	userData, ok := c.Get("currentUser")
-	if !ok {
-		return false, rest_errors.NewUnauthorizedError("unauthorized")
-	}
-
-	ctr.currentUser = userData.(*users.User)
-
-	// Check if user is authorized to access the resource
-	return ctr.currentUser.Can(action, consts.Restaurants)
-} */

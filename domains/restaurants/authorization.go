@@ -17,6 +17,6 @@ func (ctr *adminRestaurantsHandler) Authorize(action string, c *gin.Context) (bo
 
 	ctr.currentUser = userData.(*users.User)
 
-	// Check if user is authorized to access the resource
+	// Check if user can perform action on resource
 	return ctr.currentUser.Can(action, consts.Restaurants)
 }
