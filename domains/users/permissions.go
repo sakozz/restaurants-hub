@@ -4,32 +4,33 @@ import (
 	"slices"
 
 	consts "resturants-hub.com/m/v2/packages/const"
-	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
-type PermissionsMap map[consts.ResourceType]interface{}
+type PermissionsMap map[consts.Role]interface{}
 
 var (
 	PermissionMappings PermissionsMap = PermissionsMap{
-		consts.Restaurants: map[string][]consts.Role{
-			"accessCollection": {consts.Admin, consts.Manager},
-			"access":           {consts.Admin, consts.Manager},
-			"create":           {consts.Admin},
-			"update":           {consts.Admin, consts.Manager},
-			"delete":           {consts.Admin},
+		consts.Admin: map[consts.ResourceType][]string{
+			consts.Restaurants: {"accessCollection", "accessMember", "create"},
+			consts.Users:       {"accessCollection", "accessMember", "create"},
+		},
+		consts.Manager: map[consts.ResourceType][]string{
+			consts.Restaurants: {"accessMember"},
+			consts.Users:       {"accessMember"},
+		},
+		consts.Public: map[consts.ResourceType][]string{
+			consts.Restaurants: {},
+			consts.Users:       {},
 		},
 	}
 )
 
-func (user *User) Can(action string, resource consts.ResourceType) (bool, rest_errors.RestErr) {
-	mappings := PermissionMappings[resource].(map[string][]consts.Role)
-	roles := mappings[action]
-	isPermitted := slices.Contains(roles, user.Role)
+func (user *User) Can(action string, resource consts.ResourceType) bool {
+	mappings := PermissionMappings[user.Role].(map[consts.ResourceType][]string)
+	permissions := mappings[resource]
+	return slices.Contains(permissions, action)
+}
 
-	if isPermitted {
-		return isPermitted, nil
-	}
-
-	return isPermitted, rest_errors.NewForbiddenError("You are not allowed to perform this action")
-
+func (user *User) Permissions() interface{} {
+	return PermissionMappings[user.Role]
 }

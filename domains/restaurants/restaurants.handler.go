@@ -33,11 +33,6 @@ func NewAdminRestaurantsHandler() AdminRestaurantsHandler {
 }
 
 func (ctr *adminRestaurantsHandler) Create(c *gin.Context) {
-	/* Authorize request for current user */
-	if ok, restErr := ctr.Authorize("create", c); !ok {
-		c.JSON(restErr.Status(), restErr)
-		return
-	}
 
 	/* Extract request body as map */
 	var mapBody map[string]interface{}
@@ -56,6 +51,17 @@ func (ctr *adminRestaurantsHandler) Create(c *gin.Context) {
 	newRestaurant := &CreateRestaurantPayload{}
 	mapstructure.Decode(payload.Data, &newRestaurant)
 
+	/* Authorize request for current user */
+	permissions, restErr := ctr.Authorize("create", nil, c)
+	if restErr != nil {
+		c.JSON(restErr.Status(), restErr)
+		return
+	}
+
+	meta := map[string]interface{}{
+		"permissions": permissions,
+	}
+
 	if err := jsonapi.Validate.Struct(newRestaurant); err != nil {
 		restErr := rest_errors.NewValidationError(rest_errors.StructValidationErrors(err))
 		c.JSON(restErr.Status(), restErr)
@@ -68,15 +74,12 @@ func (ctr *adminRestaurantsHandler) Create(c *gin.Context) {
 		return
 	}
 	resource := restaurant.MemberFor(AdminDetails)
-	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil)
+	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonPayload)
 }
 
 func (ctr *adminRestaurantsHandler) Get(c *gin.Context) {
-	if ok, restErr := ctr.Authorize("access", c); !ok {
-		c.JSON(restErr.Status(), restErr)
-		return
-	}
+
 	id, idErr := jsonapi.GetIdFromUrl(c, false)
 	if idErr != nil {
 		c.JSON(idErr.Status(), idErr)
@@ -89,18 +92,22 @@ func (ctr *adminRestaurantsHandler) Get(c *gin.Context) {
 		return
 	}
 
-	resource := restaurant.MemberFor(AdminDetails)
-	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil)
-	c.JSON(http.StatusOK, jsonapi)
-}
-
-func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
-	/* Authorize request for current user */
-	if ok, restErr := ctr.Authorize("update", c); !ok {
+	permissions, restErr := ctr.Authorize("access", restaurant, c)
+	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return
 	}
 
+	meta := map[string]interface{}{
+		"permissions": permissions,
+	}
+
+	resource := restaurant.MemberFor(AdminDetails)
+	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	c.JSON(http.StatusOK, jsonapi)
+}
+
+func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
 	id, idErr := jsonapi.GetIdFromUrl(c, false)
 	if idErr != nil {
 		c.JSON(idErr.Status(), idErr)
@@ -112,6 +119,17 @@ func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
 	if getErr != nil {
 		c.JSON(getErr.Status(), getErr)
 		return
+	}
+
+	/* Authorize request for current user */
+	permissions, restErr := ctr.Authorize("access", record, c)
+	if restErr != nil {
+		c.JSON(restErr.Status(), restErr)
+		return
+	}
+
+	meta := map[string]interface{}{
+		"permissions": permissions,
 	}
 
 	/* Extract request body as map */
@@ -147,13 +165,14 @@ func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
 	}
 
 	resource := result.MemberFor(AdminDetails)
-	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil)
+	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonPayload)
 }
 
 func (ctr *adminRestaurantsHandler) List(c *gin.Context) {
 	/* Authorize request for current user */
-	if ok, restErr := ctr.Authorize("accessCollection", c); !ok {
+	_, restErr := ctr.Authorize("access", nil, c)
+	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return
 	}

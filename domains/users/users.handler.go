@@ -43,7 +43,7 @@ func (ctr *usersHandler) Get(c *gin.Context) {
 	}
 
 	resource := user.MemberFor(AdminDetails)
-	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil)
+	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, nil)
 	c.JSON(http.StatusOK, jsonapi)
 
 }
@@ -62,8 +62,12 @@ func (ctr *usersHandler) Profile(c *gin.Context) {
 		return
 	}
 
+	meta := map[string]interface{}{
+		"permissions": user.Permissions(),
+	}
+
 	resource := user.MemberFor(OwnerDetails)
-	jsonapi := jsonapi.NewMemberSerializer[OwnerDetailItem](resource, nil, nil)
+	jsonapi := jsonapi.NewMemberSerializer[OwnerDetailItem](resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
 
@@ -114,7 +118,7 @@ func (ctr *usersHandler) Update(c *gin.Context) {
 	}
 
 	resource := updatedUser.MemberFor(OwnerDetails)
-	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil)
+	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, nil)
 	c.JSON(http.StatusOK, jsonapi)
 }
 

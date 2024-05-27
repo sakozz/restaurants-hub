@@ -74,3 +74,11 @@ const (
 
 type Users []User
 type ResponsePayloadType int64
+
+func (user *User) IsAdmin() bool {
+	return user.Role == consts.Admin
+}
+
+func (user *User) IsManager() bool {
+	return user.Role == consts.Manager
+}

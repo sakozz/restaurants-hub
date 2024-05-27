@@ -7,13 +7,15 @@ type memberSerializer[T any] struct {
 	Data          interface{}   `json:"data"`
 	Included      []interface{} `json:"included"`
 	Relationships []interface{} `json:"relationships"`
+	Meta          interface{}   `json:"meta"`
 }
 
-func NewMemberSerializer[T any](resource interface{}, included []interface{}, relationships []interface{}) MemberSerializer {
+func NewMemberSerializer[T any](resource interface{}, included []interface{}, relationships []interface{}, meta interface{}) MemberSerializer {
 	return &memberSerializer[T]{
 		Data:          resource,
 		Included:      included,
 		Relationships: relationships,
+		Meta:          meta,
 	}
 }
 
