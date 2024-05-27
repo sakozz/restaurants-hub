@@ -62,7 +62,8 @@ type AdminDetailItem struct {
 }
 type OwnerDetailItem struct {
 	PublicListItem
-	Email string `json:"email"`
+	Email string      `json:"email"`
+	Role  consts.Role `json:"role"`
 }
 
 const (
