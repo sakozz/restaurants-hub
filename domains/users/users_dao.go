@@ -7,6 +7,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"resturants-hub.com/m/v2/database"
+	consts "resturants-hub.com/m/v2/packages/const"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
@@ -16,7 +17,7 @@ type UsersDao interface {
 	FindOrCreate(*User) (*User, rest_errors.RestErr)
 	Update(*User, interface{}) (*User, rest_errors.RestErr)
 	Get(id *int64) (*User, rest_errors.RestErr)
-	Search(url.Values) (Users, rest_errors.RestErr)
+	AuthorizedCollection(url.Values, *User) (Users, rest_errors.RestErr)
 	Where(params map[string]interface{}) (*User, rest_errors.RestErr)
 }
 
@@ -126,7 +127,16 @@ func (connection *connection) Where(params map[string]interface{}) (*User, rest_
 	return user, nil
 }
 
-func (connection *connection) Search(params url.Values) (Users, rest_errors.RestErr) {
+func (connection *connection) AuthorizedCollection(params url.Values, user *User) (Users, rest_errors.RestErr) {
+	switch user.Role {
+	case consts.Admin:
+		return connection.search(params)
+	default:
+		return Users{}, nil
+	}
+}
+
+func (connection *connection) search(params url.Values) (Users, rest_errors.RestErr) {
 	var users Users
 	sqlQuery := connection.sqlBuilder.Filter("profiles", params)
 	err := connection.db.Select(&users, sqlQuery)

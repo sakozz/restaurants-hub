@@ -18,13 +18,16 @@ type UsersHandler interface {
 }
 
 type usersHandler struct {
-	service UsersService
-	payload jsonapi.RequestPayload
+	service     UsersService
+	dao         UsersDao
+	payload     jsonapi.RequestPayload
+	currentUser *User
 }
 
 func NewUsersHandler() UsersHandler {
 	return &usersHandler{
 		service: NewUsersService(),
+		dao:     NewUserDao(),
 		payload: jsonapi.NewParamsHandler(),
 	}
 }
@@ -42,8 +45,19 @@ func (ctr *usersHandler) Get(c *gin.Context) {
 		return
 	}
 
+	/* Authorize access to resource */
+	permissions, restErr := ctr.Authorize("access", user, c)
+	if restErr != nil {
+		c.JSON(restErr.Status(), restErr)
+		return
+	}
+
+	meta := map[string]interface{}{
+		"permissions": permissions,
+	}
+
 	resource := user.MemberFor(AdminDetails)
-	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, nil)
+	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 
 }
@@ -62,8 +76,16 @@ func (ctr *usersHandler) Profile(c *gin.Context) {
 		return
 	}
 
+	/* Authorize access to resource */
+	permissions, restErr := ctr.Authorize("access", user, c)
+	if restErr != nil {
+		c.JSON(restErr.Status(), restErr)
+		return
+	}
+
 	meta := map[string]interface{}{
-		"permissions": user.Permissions(),
+		"permissions":        permissions,
+		"generalPermissions": user.Permissions(),
 	}
 
 	resource := user.MemberFor(OwnerDetails)
@@ -83,6 +105,17 @@ func (ctr *usersHandler) Update(c *gin.Context) {
 	if getErr != nil {
 		c.JSON(getErr.Status(), getErr)
 		return
+	}
+
+	/* Authorize access to resource */
+	permissions, restErr := ctr.Authorize("update", user, c)
+	if restErr != nil {
+		c.JSON(restErr.Status(), restErr)
+		return
+	}
+
+	meta := map[string]interface{}{
+		"permissions": permissions,
 	}
 
 	/* Extract request body as map */
@@ -118,7 +151,7 @@ func (ctr *usersHandler) Update(c *gin.Context) {
 	}
 
 	resource := updatedUser.MemberFor(OwnerDetails)
-	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, nil)
+	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
 
@@ -137,8 +170,15 @@ func (ctr *usersHandler) Delete(c *gin.Context) {
 }
 
 func (ctr *usersHandler) List(c *gin.Context) {
+	/* Authorize request for current user */
+	_, restErr := ctr.Authorize("accessCollection", nil, c)
+	if restErr != nil {
+		c.JSON(restErr.Status(), restErr)
+		return
+	}
+
 	params := jsonapi.WhitelistQueryParams(c, []string{"first_name", "email", "id", "last_name"})
-	result, err := ctr.service.SearchUser(params)
+	result, err := ctr.dao.AuthorizedCollection(params, ctr.currentUser)
 	if err != nil {
 		c.JSON(err.Status(), err)
 		return

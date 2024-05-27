@@ -92,6 +92,7 @@ func (ctr *adminRestaurantsHandler) Get(c *gin.Context) {
 		return
 	}
 
+	/* Authorize access to resource */
 	permissions, restErr := ctr.Authorize("access", restaurant, c)
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
@@ -171,7 +172,7 @@ func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
 
 func (ctr *adminRestaurantsHandler) List(c *gin.Context) {
 	/* Authorize request for current user */
-	_, restErr := ctr.Authorize("access", nil, c)
+	_, restErr := ctr.Authorize("accessCollection", nil, c)
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return

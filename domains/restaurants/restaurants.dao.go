@@ -79,7 +79,7 @@ func (connection *connection) AuthorizedCollection(params url.Values, user *user
 		params.Add("profile_id", fmt.Sprint(user.Id))
 		return connection.Search(params)
 	default:
-		return nil, rest_errors.NewForbiddenError("You are not authorized to view this resource")
+		return Restaurants{}, nil
 	}
 }
 

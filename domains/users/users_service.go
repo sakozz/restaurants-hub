@@ -1,8 +1,6 @@
 package users
 
 import (
-	"net/url"
-
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
@@ -12,7 +10,6 @@ import (
 
 type UsersService interface {
 	GetUser(int64) (*User, rest_errors.RestErr)
-	SearchUser(url.Values) (Users, rest_errors.RestErr)
 	UpdateUser(*User, interface{}) (*User, rest_errors.RestErr)
 	// DeleteUser(int64) rest_errors.RestErr
 
@@ -46,13 +43,4 @@ func (service *usersService) UpdateUser(user *User, payload interface{}) (*User,
 	}
 
 	return updatedUser, nil
-}
-
-// func (s *usersService) DeleteUser(userId int64) rest_errors.RestErr {
-// 	dao := &User{Id: userId}
-// 	return dao.Delete()
-// }
-
-func (s *usersService) SearchUser(params url.Values) (Users, rest_errors.RestErr) {
-	return s.dao.Search(params)
 }
