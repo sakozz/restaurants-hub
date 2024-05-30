@@ -30,6 +30,7 @@ type SessionService interface {
 	InvalidateToken(*users.Session) (bool, rest_errors.RestErr)
 	ValidateSessionToken(string) (*users.Session, rest_errors.RestErr)
 	RenewSession(*users.Session) (*users.Session, rest_errors.RestErr)
+	GenerateJwtToken() (*Jwt, error)
 	/*
 	   FindUserByLoginPayload(users.Session) (*users.Session, rest_errors.RestErr)
 	   GenerateJwtToken(*users.Session) (*Jwt, error)
@@ -74,7 +75,7 @@ func (service *sessionService) RenewSession(session *users.Session) (*users.Sess
 	return service.usersDao.FindByLoginPayload(payload)
 }  */
 
-func (service *sessionService) GenerateJwtToken(user *users.Session) (*Jwt, error) {
+func (service *sessionService) GenerateJwtToken() (*Jwt, error) {
 	// Declare the expiration time of the token here
 	expirationTime := time.Now().Add(time.Duration(JwtLifeSpan) * time.Second)
 

@@ -3,6 +3,7 @@ package app
 import (
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"resturants-hub.com/m/v2/domains/restaurants"
 	"resturants-hub.com/m/v2/domains/sessions"
@@ -23,6 +24,13 @@ func mapRoutes() {
 			"content": "This is an index page...",
 		})
 	})
+
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:4200"}
+	config.AllowCredentials = true
+	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization", "user-agent", "X-Requested-With", "Set-Cookie", "Cookie", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "Accept-Language", "Accept-Encoding", "Accept", "Connection", "Host", "Referer", "Origin", "User-Agent"}
+	router.Use(cors.New(config))
 
 	/* Admin routes */
 	adminRoutes := router.Group("/api/admin", middleware.RequireAuth)

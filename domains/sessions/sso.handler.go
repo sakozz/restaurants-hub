@@ -94,8 +94,8 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 		return
 	}
 	// Finally, we set the client cookie for "token"
-	// we also set an expiry time which is the same as the token itself
-	// c.SetCookie("restaurant-cookie", session.AccessToken, 2000, "/", "localhost", false, true)
+	setCookie(c, &session)
+
 	c.JSON(http.StatusOK, session)
 }
 
@@ -135,6 +135,9 @@ func (handler *ssoHandler) RenewSession(c *gin.Context) {
 		c.JSON(restErr.Status(), restErr)
 		return
 	}
+
+	// Finally, we set the client cookie for "token"
+	setCookie(c, newSession)
 
 	c.JSON(http.StatusOK, newSession)
 }
@@ -190,4 +193,8 @@ func (handler *ssoHandler) RetrieveUserInfo(client *http.Client, token string) (
 		LastName:  data.FamilyName,
 		AvatarURL: data.Picture,
 	}, nil
+}
+
+func setCookie(c *gin.Context, session *users.Session) {
+	c.SetCookie(os.Getenv("AUTH_COOKIE_NAME"), session.AccessToken, 2000, "/", "localhost", false, false)
 }
