@@ -63,6 +63,9 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 	token, err := sso.GoogleSsoConfig.Exchange(ctx, code, oauth2.VerifierOption(verifier))
 	if err != nil {
 		fmt.Println("Error on SSO token exchange:", err)
+		restErr := rest_errors.NewInternalServerError(err)
+		c.JSON(restErr.Status(), restErr)
+		return
 	}
 
 	// Retrieve user data by token
@@ -70,6 +73,9 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 	userData, err := handler.RetrieveUserInfo(client, token.AccessToken)
 	if err != nil {
 		fmt.Println("Retrieve user error:", err)
+		restErr := rest_errors.NewInternalServerError(err)
+		c.JSON(restErr.Status(), restErr)
+		return
 	}
 
 	user, restErr := handler.usersDao.FindOrCreate(userData)
@@ -84,7 +90,7 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 		ExpiresAt:    token.Expiry,
 		RefreshToken: token.RefreshToken,
 		Email:        user.Email,
-		ProfileId:    user.Id,
+		UserId:       user.Id,
 	})
 	_, error := handler.service.CreateSession(&session)
 

@@ -76,7 +76,7 @@ func (connection *connection) AuthorizedCollection(params url.Values, user *user
 	case consts.Admin:
 		return connection.Search(params)
 	case consts.Manager:
-		params.Add("profile_id", fmt.Sprint(user.Id))
+		params.Add("user_id", fmt.Sprint(user.Id))
 		return connection.Search(params)
 	default:
 		return Restaurants{}, nil
@@ -106,7 +106,7 @@ func UniquenessErrors(errorKey string) *rest_errors.ValidationErrs {
 		"restaurants_name_key":  "name",
 		"restaurants_email_key": "email",
 		"restaurants_phone_key": "phone",
-		"fk_profile":            "profileId",
+		"fk_user":               "userId",
 	}
 
 	attr := errKeyMaps[errorKey]

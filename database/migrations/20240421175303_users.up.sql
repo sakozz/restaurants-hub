@@ -1,7 +1,7 @@
 BEGIN;
 
 CREATE TABLE
-    IF NOT EXISTS profiles (
+    IF NOT EXISTS users (
         id serial PRIMARY KEY,
         role VARCHAR(50) NOT NULL DEFAULT 'public',
         first_name VARCHAR(50) NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE
         deleted_at timestamp
     );
 
-CREATE TRIGGER update_profile_updated_at BEFORE
-UPDATE ON profiles FOR EACH ROW EXECUTE PROCEDURE update_modified_column ();
+CREATE TRIGGER update_user_updated_at BEFORE
+UPDATE ON users FOR EACH ROW EXECUTE PROCEDURE update_modified_column ();
 
 COMMIT;

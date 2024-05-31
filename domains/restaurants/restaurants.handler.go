@@ -12,27 +12,28 @@ import (
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
-type AdminRestaurantsHandler interface {
+type RestaurantsHandler interface {
 	Create(c *gin.Context)
 	Get(c *gin.Context)
+	MyRestaurant(c *gin.Context)
 	List(c *gin.Context)
 	Update(c *gin.Context)
 }
 
-type adminRestaurantsHandler struct {
+type restaurantsHandler struct {
 	dao         RestaurantDao
 	payload     jsonapi.RequestPayload
 	currentUser *users.User
 }
 
-func NewAdminRestaurantsHandler() AdminRestaurantsHandler {
-	return &adminRestaurantsHandler{
+func NewAdminRestaurantsHandler() RestaurantsHandler {
+	return &restaurantsHandler{
 		dao:     NewRestaurantDao(),
 		payload: jsonapi.NewParamsHandler(),
 	}
 }
 
-func (ctr *adminRestaurantsHandler) Create(c *gin.Context) {
+func (ctr *restaurantsHandler) Create(c *gin.Context) {
 
 	/* Extract request body as map */
 	var mapBody map[string]interface{}
@@ -78,7 +79,7 @@ func (ctr *adminRestaurantsHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusOK, jsonPayload)
 }
 
-func (ctr *adminRestaurantsHandler) Get(c *gin.Context) {
+func (ctr *restaurantsHandler) Get(c *gin.Context) {
 
 	id, idErr := jsonapi.GetIdFromUrl(c, false)
 	if idErr != nil {
@@ -108,7 +109,37 @@ func (ctr *adminRestaurantsHandler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, jsonapi)
 }
 
-func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
+func (ctr *restaurantsHandler) MyRestaurant(c *gin.Context) {
+
+	id, idErr := jsonapi.GetIdFromUrl(c, false)
+	if idErr != nil {
+		c.JSON(idErr.Status(), idErr)
+		return
+	}
+
+	restaurant, getErr := ctr.dao.Get(&id)
+	if getErr != nil {
+		c.JSON(getErr.Status(), getErr)
+		return
+	}
+
+	/* Authorize access to resource */
+	permissions, restErr := ctr.Authorize("access", restaurant, c)
+	if restErr != nil {
+		c.JSON(restErr.Status(), restErr)
+		return
+	}
+
+	meta := map[string]interface{}{
+		"permissions": permissions,
+	}
+
+	resource := restaurant.MemberFor(AdminDetails)
+	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	c.JSON(http.StatusOK, jsonapi)
+}
+
+func (ctr *restaurantsHandler) Update(c *gin.Context) {
 	id, idErr := jsonapi.GetIdFromUrl(c, false)
 	if idErr != nil {
 		c.JSON(idErr.Status(), idErr)
@@ -170,7 +201,7 @@ func (ctr *adminRestaurantsHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, jsonPayload)
 }
 
-func (ctr *adminRestaurantsHandler) List(c *gin.Context) {
+func (ctr *restaurantsHandler) List(c *gin.Context) {
 	/* Authorize request for current user */
 	_, restErr := ctr.Authorize("accessCollection", nil, c)
 	if restErr != nil {
@@ -178,7 +209,7 @@ func (ctr *adminRestaurantsHandler) List(c *gin.Context) {
 		return
 	}
 
-	params := jsonapi.WhitelistQueryParams(c, []string{"profile_id", "name", "email", "phone"})
+	params := jsonapi.WhitelistQueryParams(c, []string{"user_id", "name", "email", "phone"})
 
 	// Get authorized collection of restaurants
 	result, err := ctr.dao.AuthorizedCollection(params, ctr.currentUser)

@@ -48,7 +48,7 @@ func (user *User) Validate() rest_errors.RestErr {
 
 func (connection *connection) Create(payload *User) (*User, rest_errors.RestErr) {
 	user := &User{}
-	sqlQuery := connection.sqlBuilder.Insert("profiles", payload)
+	sqlQuery := connection.sqlBuilder.Insert("users", payload)
 
 	row := connection.db.QueryRowx(sqlQuery)
 	if row.Err() != nil {
@@ -72,7 +72,7 @@ func (connection *connection) FindOrCreate(userData *User) (*User, rest_errors.R
 		return user, nil
 	}
 
-	sqlQuery := connection.sqlBuilder.Insert("profiles", userData)
+	sqlQuery := connection.sqlBuilder.Insert("users", userData)
 
 	row := connection.db.QueryRowx(sqlQuery)
 	if row.Err() != nil {
@@ -89,7 +89,7 @@ func (connection *connection) FindOrCreate(userData *User) (*User, rest_errors.R
 }
 
 func (connection *connection) Update(user *User, payload interface{}) (*User, rest_errors.RestErr) {
-	sqlQuery := connection.sqlBuilder.Update("profiles", &user.Id, payload)
+	sqlQuery := connection.sqlBuilder.Update("users", &user.Id, payload)
 	row := connection.db.QueryRowx(sqlQuery)
 	if row.Err() != nil {
 		if uniquenessViolation, constraintName := database.HasUniquenessViolation(row.Err()); uniquenessViolation {
@@ -103,7 +103,7 @@ func (connection *connection) Update(user *User, payload interface{}) (*User, re
 
 func (connection *connection) Get(id *int64) (*User, rest_errors.RestErr) {
 	user := &User{}
-	query := connection.sqlBuilder.Find("profiles", map[string]interface{}{"id": id})
+	query := connection.sqlBuilder.Find("users", map[string]interface{}{"id": id})
 	err := connection.db.Get(user, query)
 
 	if err != nil {
@@ -117,7 +117,7 @@ func (connection *connection) Get(id *int64) (*User, rest_errors.RestErr) {
 func (connection *connection) Where(params map[string]interface{}) (*User, rest_errors.RestErr) {
 	user := &User{}
 
-	query := connection.sqlBuilder.SearchBy("profiles", params)
+	query := connection.sqlBuilder.SearchBy("users", params)
 	err := connection.db.Get(user, query)
 	if err != nil {
 		fmt.Println("Error Occured:", err)
@@ -138,7 +138,7 @@ func (connection *connection) AuthorizedCollection(params url.Values, user *User
 
 func (connection *connection) search(params url.Values) (Users, rest_errors.RestErr) {
 	var users Users
-	sqlQuery := connection.sqlBuilder.Filter("profiles", params)
+	sqlQuery := connection.sqlBuilder.Filter("users", params)
 	err := connection.db.Select(&users, sqlQuery)
 	if err != nil {
 		return nil, rest_errors.NewNotFoundError(err.Error())

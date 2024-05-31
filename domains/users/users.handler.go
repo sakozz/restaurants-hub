@@ -70,7 +70,7 @@ func (ctr *usersHandler) Profile(c *gin.Context) {
 		return
 	}
 
-	user, getErr := ctr.service.GetUser(session.(*Session).ProfileId)
+	user, getErr := ctr.service.GetUser(session.(*Session).UserId)
 	if getErr != nil {
 		c.JSON(getErr.Status(), getErr)
 		return
@@ -84,8 +84,8 @@ func (ctr *usersHandler) Profile(c *gin.Context) {
 	}
 
 	meta := map[string]interface{}{
-		"permissions":        permissions,
-		"generalPermissions": user.Permissions(),
+		"permissions":    permissions,
+		"appPermissions": user.Permissions(),
 	}
 
 	resource := user.MemberFor(OwnerDetails)

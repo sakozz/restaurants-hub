@@ -11,10 +11,10 @@ CREATE TABLE
         created_at timestamp NOT NULL DEFAULT now (),
         updated_at timestamp NOT NULL DEFAULT now (),
         deleted_at timestamp,
-        profile_id int NOT NULL,
+        user_id int NOT NULL,
         restaurant_id int NOT NULL,
         CONSTRAINT fk_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurants (id),
-        CONSTRAINT fk_author FOREIGN KEY (profile_id) REFERENCES profiles (id)
+        CONSTRAINT fk_author FOREIGN KEY (user_id) REFERENCES users (id)
     );
 
 CREATE TRIGGER update_pages_updated_at BEFORE

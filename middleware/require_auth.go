@@ -28,7 +28,7 @@ func RequireAuth(c *gin.Context) {
 
 	// Get user by id
 	usersDao := users.NewUserDao()
-	user, err := usersDao.Get(&session.ProfileId)
+	user, err := usersDao.Get(&session.UserId)
 	if err != nil {
 		unauthorisedError(c)
 		return

@@ -3,7 +3,7 @@ BEGIN;
 CREATE TABLE
     IF NOT EXISTS restaurants (
         id serial PRIMARY KEY,
-        profile_id int NOT NULL,
+        manager_id int NOT NULL,
         name VARCHAR(50) NOT NULL,
         description VARCHAR(5000) NOT NULL,
         address JSONB DEFAULT '{}'::jsonb,
@@ -16,7 +16,7 @@ CREATE TABLE
         created_at timestamp NOT NULL DEFAULT now (),
         updated_at timestamp NOT NULL DEFAULT now (),
         deleted_at timestamp,
-        CONSTRAINT fk_profile FOREIGN KEY (profile_id) REFERENCES profiles (id)
+        CONSTRAINT fk_user FOREIGN KEY (manager_id) REFERENCES users (id)
     );
 
 CREATE TRIGGER update_restaurant_updated_at BEFORE

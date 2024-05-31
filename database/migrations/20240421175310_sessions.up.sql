@@ -4,7 +4,7 @@ CREATE TABLE
     IF NOT EXISTS sessions (
         id serial PRIMARY KEY,
         provider VARCHAR(300),
-        profile_id int NOT NULL,
+        user_id int NOT NULL,
         email VARCHAR(300),
         access_token VARCHAR(4000),
         access_token_secret VARCHAR(4000) DEFAULT '',
@@ -13,7 +13,7 @@ CREATE TABLE
         expires_at timestamp NOT NULL DEFAULT now (),
         created_at timestamp NOT NULL DEFAULT now (),
         updated_at timestamp NOT NULL DEFAULT now (),
-        CONSTRAINT fk_profile FOREIGN KEY (profile_id) REFERENCES profiles (id)
+        CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users (id)
     );
 
 CREATE TRIGGER update_session_updated_at BEFORE

@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	ssoHandler              sessions.SsoHandler                 = sessions.NewSsoHandler()
-	usersHandler            users.UsersHandler                  = users.NewUsersHandler()
-	adminRestaurantsHandler restaurants.AdminRestaurantsHandler = restaurants.NewAdminRestaurantsHandler()
+	ssoHandler         sessions.SsoHandler            = sessions.NewSsoHandler()
+	usersHandler       users.UsersHandler             = users.NewUsersHandler()
+	restaurantsHandler restaurants.RestaurantsHandler = restaurants.NewAdminRestaurantsHandler()
 )
 
 func mapRoutes() {
@@ -37,11 +37,11 @@ func mapRoutes() {
 	{
 		/* Admin Restaurant routes */
 		adminRestaurantsRoutes := adminRoutes.Group("/restaurants")
-		adminRestaurantsRoutes.POST("/", adminRestaurantsHandler.Create)
-		adminRestaurantsRoutes.GET("/", adminRestaurantsHandler.List)
-		adminRestaurantsRoutes.GET("/:id", adminRestaurantsHandler.Get)
-		adminRestaurantsRoutes.PUT("/:id", adminRestaurantsHandler.Update)
-		adminRestaurantsRoutes.PATCH("/:id", adminRestaurantsHandler.Update)
+		adminRestaurantsRoutes.POST("/", restaurantsHandler.Create)
+		adminRestaurantsRoutes.GET("/", restaurantsHandler.List)
+		adminRestaurantsRoutes.GET("/:id", restaurantsHandler.Get)
+		adminRestaurantsRoutes.PUT("/:id", restaurantsHandler.Update)
+		adminRestaurantsRoutes.PATCH("/:id", restaurantsHandler.Update)
 
 		adminUsersRoutes := adminRoutes.Group("/users")
 		adminUsersRoutes.GET("/", usersHandler.List)
@@ -49,6 +49,11 @@ func mapRoutes() {
 		adminUsersRoutes.GET("/:id", usersHandler.Get)
 	}
 
+	/* Manager's Restaurant routes */
+	restaurantRoutes := router.Group("/api/:slug", middleware.RequireAuth)
+	{
+		restaurantRoutes.GET("/", restaurantsHandler.MyRestaurant)
+	}
 	/* Auth routes */
 	authRoutes := router.Group("/api/auth")
 	{

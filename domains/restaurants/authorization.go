@@ -28,7 +28,7 @@ func (auth *authorizer) userOwnsResource() bool {
 	if auth.restaurant == nil || auth.currentUser == nil {
 		return false
 	}
-	return auth.currentUser.Id == auth.restaurant.ProfileId
+	return auth.currentUser.Id == auth.restaurant.UserId
 }
 
 /*
@@ -42,7 +42,7 @@ type permissions struct {
 	CanDelete bool `json:"canDelete"`
 }
 
-func (ctr *adminRestaurantsHandler) Authorize(action string, resource *Restaurant, c *gin.Context) (interface{}, rest_errors.RestErr) {
+func (ctr *restaurantsHandler) Authorize(action string, resource *Restaurant, c *gin.Context) (interface{}, rest_errors.RestErr) {
 
 	// Get current user from context
 	userData, ok := c.Get("currentUser")

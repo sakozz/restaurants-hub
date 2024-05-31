@@ -10,7 +10,7 @@ import (
 // DB representation of the restaurant table
 type Restaurant struct {
 	Id            int64                  `json:"id" db:"id" goqu:"skipinsert,skipupdate"`
-	ProfileId     int64                  `json:"profileId" db:"profile_id" goqu:"omitempty" validate:"required"`
+	UserId        int64                  `json:"userId" db:"user_id" goqu:"omitempty" validate:"required"`
 	Name          string                 `json:"name" db:"name" goqu:"omitempty" validate:"required,min=3,max=50"`
 	Description   string                 `json:"description" db:"description" goqu:"omitempty" validate:"required,min=10"`
 	Address       types.JsonMap[Address] `json:"address" db:"address" goqu:"omitempty" validate:"required"`
@@ -33,7 +33,7 @@ type Address struct {
 
 /* Struct for creating new restaurant */
 type CreateRestaurantPayload struct {
-	ProfileId     int64                  `json:"profileId" db:"profile_id" validate:"required"`
+	UserId        int64                  `json:"userId" db:"user_id" validate:"required"`
 	Name          string                 `json:"name" db:"name" validate:"required,min=3,max=50"`
 	Address       types.JsonMap[Address] `json:"address" db:"address" validate:"required"`
 	Description   string                 `json:"description" db:"description" validate:"required,min=10"`
@@ -47,7 +47,7 @@ type CreateRestaurantPayload struct {
 
 type AdminListItem struct {
 	Id          int64                  `json:"id"`
-	ProfileId   int64                  `json:"profileId" db:"profile_id"`
+	UserId      int64                  `json:"userId" db:"user_id"`
 	Name        string                 `json:"name" db:"name"`
 	Description string                 `json:"description" db:"description"`
 	Address     types.JsonMap[Address] `json:"address" db:"address"`
@@ -58,7 +58,7 @@ type AdminListItem struct {
 
 type AdminDetailItem struct {
 	Id            int64                  `json:"id"`
-	ProfileId     int64                  `json:"profileId" db:"profile_id"`
+	UserId        int64                  `json:"userId" db:"user_id"`
 	Name          string                 `json:"name" db:"name"`
 	Description   string                 `json:"description" db:"description"`
 	Address       types.JsonMap[Address] `json:"address" db:"address"`
@@ -75,7 +75,7 @@ type AdminDetailItem struct {
 
 type OwnerListItem struct {
 	Id          int64     `json:"id"`
-	ProfileId   int64     `json:"profileId" db:"profile_id"`
+	UserId      int64     `json:"userId" db:"user_id"`
 	Name        string    `json:"name" db:"name"`
 	Description string    `json:"description" db:"description"`
 	Address     string    `json:"address" db:"address"`
@@ -86,7 +86,7 @@ type OwnerListItem struct {
 
 type OwnerDetailItem struct {
 	Id            int64     `json:"id"`
-	ProfileId     int64     `json:"profileId" db:"profile_id"`
+	UserId        int64     `json:"userId" db:"user_id"`
 	Name          string    `json:"name" db:"name"`
 	Description   string    `json:"description" db:"description"`
 	Address       string    `json:"address" db:"address"`
@@ -104,7 +104,7 @@ type PayloadTypes interface {
 }
 
 func (restaurant *Restaurant) AdminUpdableAttributes() []string {
-	return []string{"profileId", "name", "description", "address", "email", "phone", "mobile", "website", "facebookLink", "instagramLink", "deletedAt"}
+	return []string{"userId", "name", "description", "address", "email", "phone", "mobile", "website", "facebookLink", "instagramLink", "deletedAt"}
 }
 
 const (
