@@ -28,7 +28,7 @@ func (auth *authorizer) userOwnsResource() bool {
 	if auth.restaurant == nil || auth.currentUser == nil {
 		return false
 	}
-	return auth.currentUser.Id == auth.restaurant.UserId
+	return auth.currentUser.Id == auth.restaurant.ManagerId
 }
 
 /*
