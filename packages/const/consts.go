@@ -13,4 +13,5 @@ type ResourceType string
 const (
 	Restaurants ResourceType = "restaurants"
 	Users                    = "users"
+	Invitations              = "invitations"
 )

@@ -1,4 +1,4 @@
-package users
+package invitations
 
 import (
 	"encoding/json"
@@ -7,34 +7,32 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/mapstructure"
+	"resturants-hub.com/m/v2/domains/users"
 	"resturants-hub.com/m/v2/jsonapi"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
-type UsersHandler interface {
+type InvitationsHandler interface {
 	Create(c *gin.Context)
 	Update(c *gin.Context)
 	Get(c *gin.Context)
-	Profile(c *gin.Context)
 	List(c *gin.Context)
 }
 
-type usersHandler struct {
-	service     UsersService
-	dao         UsersDao
+type invitationsHandler struct {
+	dao         InvitationsDao
 	payload     jsonapi.RequestPayload
-	currentUser *User
+	currentUser *users.User
 }
 
-func NewUsersHandler() UsersHandler {
-	return &usersHandler{
-		service: NewUsersService(),
-		dao:     NewUserDao(),
+func NewInvitationsHandler() InvitationsHandler {
+	return &invitationsHandler{
+		dao:     NewInvitationDao(),
 		payload: jsonapi.NewParamsHandler(),
 	}
 }
 
-func (ctr *usersHandler) Create(c *gin.Context) {
+func (ctr *invitationsHandler) Create(c *gin.Context) {
 
 	/* Extract request body as map */
 	var mapBody map[string]interface{}
@@ -50,7 +48,7 @@ func (ctr *usersHandler) Create(c *gin.Context) {
 
 	/* Parse jsonapi payload and set attributes to data*/
 	payload := ctr.payload.SetData(mapBody)
-	newRecord := &CreateUserPayload{}
+	newRecord := &CreateInvitationPayload{}
 	mapstructure.Decode(payload.Data, &newRecord)
 
 	/* Authorize request for current user */
@@ -70,31 +68,31 @@ func (ctr *usersHandler) Create(c *gin.Context) {
 		return
 	}
 
-	user, getErr := ctr.dao.Create(newRecord)
+	restaurant, getErr := ctr.dao.Create(newRecord)
 	if getErr != nil {
 		c.JSON(getErr.Status(), getErr)
 		return
 	}
-	resource := user.MemberFor(AdminDetails)
-	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	resource := restaurant.MemberFor()
+	jsonPayload := jsonapi.NewMemberSerializer[Invitation](resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonPayload)
 }
 
-func (ctr *usersHandler) Get(c *gin.Context) {
-	userId, idErr := jsonapi.GetIdFromUrl(c, false)
+func (ctr *invitationsHandler) Get(c *gin.Context) {
+	id, idErr := jsonapi.GetIdFromUrl(c, false)
 	if idErr != nil {
 		c.JSON(idErr.Status(), idErr)
 		return
 	}
 
-	user, getErr := ctr.service.GetUser(userId)
+	invitation, getErr := ctr.dao.Get(&id)
 	if getErr != nil {
 		c.JSON(getErr.Status(), getErr)
 		return
 	}
 
 	/* Authorize access to resource */
-	permissions, restErr := ctr.Authorize("access", user, c)
+	permissions, restErr := ctr.Authorize("access", invitation, c)
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return
@@ -104,59 +102,28 @@ func (ctr *usersHandler) Get(c *gin.Context) {
 		"permissions": permissions,
 	}
 
-	resource := user.MemberFor(AdminDetails)
-	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	resource := invitation.MemberFor()
+	jsonapi := jsonapi.NewMemberSerializer[Invitation](resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 
 }
 
-func (ctr *usersHandler) Profile(c *gin.Context) {
-	session, ok := c.Get("currentSession")
-	if !ok {
-		restError := rest_errors.InvalidError("unauthorized")
-		c.JSON(restError.Status(), restError)
-		return
-	}
-
-	user, getErr := ctr.service.GetUser(session.(*Session).UserId)
-	if getErr != nil {
-		c.JSON(getErr.Status(), getErr)
-		return
-	}
-
-	/* Authorize access to resource */
-	permissions, restErr := ctr.Authorize("access", user, c)
-	if restErr != nil {
-		c.JSON(restErr.Status(), restErr)
-		return
-	}
-
-	meta := map[string]interface{}{
-		"permissions":    permissions,
-		"appPermissions": user.Permissions(),
-	}
-
-	resource := user.MemberFor(OwnerDetails)
-	jsonapi := jsonapi.NewMemberSerializer[OwnerDetailItem](resource, nil, nil, meta)
-	c.JSON(http.StatusOK, jsonapi)
-}
-
-func (ctr *usersHandler) Update(c *gin.Context) {
-	userId, idErr := jsonapi.GetIdFromUrl(c, false)
+func (ctr *invitationsHandler) Update(c *gin.Context) {
+	id, idErr := jsonapi.GetIdFromUrl(c, false)
 	if idErr != nil {
 		c.JSON(idErr.Status(), idErr)
 		return
 	}
 
 	/* Check if user exists with given Id */
-	user, getErr := ctr.service.GetUser(userId)
+	invitation, getErr := ctr.dao.Get(&id)
 	if getErr != nil {
 		c.JSON(getErr.Status(), getErr)
 		return
 	}
 
 	/* Authorize access to resource */
-	permissions, restErr := ctr.Authorize("update", user, c)
+	permissions, restErr := ctr.Authorize("update", invitation, c)
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return
@@ -178,7 +145,7 @@ func (ctr *usersHandler) Update(c *gin.Context) {
 	/* Validate required params and whitelisted payload data */
 	json.Unmarshal(jsonData, &mapBody)
 	payload := ctr.payload.SetData(mapBody)
-	payload.Require([]string{"id"}).Permit(user.UpdableAttributes())
+	payload.Require([]string{"id"}).Permit(invitation.UpdableAttributes())
 
 	/* Skip empty data and patch with only new data if the update is partial(PATCH) */
 	isPartial := c.Request.Method == http.MethodPatch
@@ -192,32 +159,18 @@ func (ctr *usersHandler) Update(c *gin.Context) {
 		return
 	}
 
-	updatedUser, updateErr := ctr.service.UpdateUser(user, payload.Data)
+	updatedUser, updateErr := ctr.dao.Update(invitation, payload.Data)
 	if updateErr != nil {
 		c.JSON(updateErr.Status(), updateErr)
 		return
 	}
 
-	resource := updatedUser.MemberFor(OwnerDetails)
-	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	resource := updatedUser.MemberFor()
+	jsonapi := jsonapi.NewMemberSerializer[Invitation](resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
 
-func (ctr *usersHandler) Delete(c *gin.Context) {
-	// userId, idErr := getUserId(c.Param("user_id"))
-	// if idErr != nil {
-	// 	c.JSON(idErr.Status(), idErr)
-	// 	return
-	// }
-
-	// if err := services.UsersService.DeleteUser(userId); err != nil {
-	// 	c.JSON(err.Status(), err)
-	// 	return
-	// }
-	// c.JSON(http.StatusOK, map[string]string{"status": "deleted"})
-}
-
-func (ctr *usersHandler) List(c *gin.Context) {
+func (ctr *invitationsHandler) List(c *gin.Context) {
 	/* Authorize request for current user */
 	_, restErr := ctr.Authorize("accessCollection", nil, c)
 	if restErr != nil {
@@ -225,7 +178,7 @@ func (ctr *usersHandler) List(c *gin.Context) {
 		return
 	}
 
-	params := jsonapi.WhitelistQueryParams(c, []string{"first_name", "email", "id", "last_name"})
+	params := jsonapi.WhitelistQueryParams(c, []string{"email", "token", "expires_at"})
 	result, err := ctr.dao.AuthorizedCollection(params, ctr.currentUser)
 	if err != nil {
 		c.JSON(err.Status(), err)
@@ -236,7 +189,7 @@ func (ctr *usersHandler) List(c *gin.Context) {
 		"total": len(result),
 	}
 
-	collection := result.CollectionFor(AdminList)
-	jsonapi := jsonapi.NewCollectionSerializer[AdminListItem](collection, meta)
+	collection := result.CollectionFor()
+	jsonapi := jsonapi.NewCollectionSerializer[Invitation](collection, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }

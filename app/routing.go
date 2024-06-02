@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"resturants-hub.com/m/v2/domains/invitations"
 	"resturants-hub.com/m/v2/domains/restaurants"
 	"resturants-hub.com/m/v2/domains/sessions"
 	"resturants-hub.com/m/v2/domains/users"
@@ -14,6 +15,7 @@ import (
 var (
 	ssoHandler         sessions.SsoHandler            = sessions.NewSsoHandler()
 	usersHandler       users.UsersHandler             = users.NewUsersHandler()
+	invitationsHandler invitations.InvitationsHandler = invitations.NewInvitationsHandler()
 	restaurantsHandler restaurants.RestaurantsHandler = restaurants.NewAdminRestaurantsHandler()
 )
 
@@ -44,9 +46,17 @@ func mapRoutes() {
 		adminRestaurantsRoutes.PATCH("/:id", restaurantsHandler.Update)
 
 		adminUsersRoutes := adminRoutes.Group("/users")
+		adminUsersRoutes.POST("/", usersHandler.Create)
 		adminUsersRoutes.GET("/", usersHandler.List)
 		adminUsersRoutes.GET("/profile", usersHandler.Profile)
 		adminUsersRoutes.GET("/:id", usersHandler.Get)
+
+		/* Admin Invitations routes */
+		adminInvitationsRoutes := adminRoutes.Group("/invitations")
+		adminInvitationsRoutes.POST("/", invitationsHandler.Create)
+		adminInvitationsRoutes.GET("/", invitationsHandler.List)
+		adminInvitationsRoutes.GET("/:id", invitationsHandler.Get)
+		adminInvitationsRoutes.PATCH("/:id", invitationsHandler.Update)
 	}
 
 	/* Manager's Restaurant routes */

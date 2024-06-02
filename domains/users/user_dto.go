@@ -30,11 +30,11 @@ type User struct {
 }
 
 type CreateUserPayload struct {
-	ID                   int64  `json:"id" goqu:"skipinsert"`
-	Username             string `json:"username"`
-	Email                string `json:"email"`
-	Password             string `json:"password"`
-	PasswordConfirmation string `json:"passwordConfirmation" goqu:"skipinsert"`
+	Email     string      `json:"email" db:"email"`
+	Role      consts.Role `json:"role" db:"role"`
+	FirstName string      `json:"firstName" db:"first_name"`
+	LastName  string      `json:"lastName" db:"last_name"`
+	AvatarURL string      `json:"avatarUrl" db:"avatar_url"`
 }
 
 type LoginPayload struct {
@@ -50,12 +50,12 @@ type PublicListItem struct {
 }
 type AdminListItem struct {
 	PublicListItem
-	Email string `json:"email"`
+	Role  consts.Role `json:"role"`
+	Email string      `json:"email"`
 }
 
 type AdminDetailItem struct {
 	AdminListItem
-	Role      consts.Role    `json:"role"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt types.NullTime `json:"deletedAt"`

@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
+	"resturants-hub.com/m/v2/domains/invitations"
 	"resturants-hub.com/m/v2/domains/sso"
 	"resturants-hub.com/m/v2/domains/users"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
@@ -23,14 +24,16 @@ type SsoHandler interface {
 }
 
 type ssoHandler struct {
-	service  SessionService
-	usersDao users.UsersDao
+	service        SessionService
+	usersDao       users.UsersDao
+	invitationsDao invitations.InvitationsDao
 }
 
 func NewSsoHandler() SsoHandler {
 	return &ssoHandler{
-		service:  NewSessionService(),
-		usersDao: users.NewUserDao(),
+		service:        NewSessionService(),
+		usersDao:       users.NewUserDao(),
+		invitationsDao: invitations.NewInvitationDao(),
 	}
 }
 
@@ -78,9 +81,29 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 		return
 	}
 
-	user, restErr := handler.usersDao.FindOrCreate(userData)
-	if restErr != nil {
-		c.JSON(restErr.Status(), restErr)
+	// Check if user is registered
+	user := handler.usersDao.Where(map[string]interface{}{"email": userData.Email})
+	if user == nil {
+		// Check if user has a valid invitation
+		invitation := handler.invitationsDao.Where(map[string]interface{}{"email": userData.Email})
+
+		// If user is not registered, check if user has a valid invitation
+		if invitation == nil || !invitation.IsValid() {
+			fmt.Println("User is not registered or no valid invitation", invitation.IsValid())
+			restErr := rest_errors.NewForbiddenError("User is not registered or no valid invitation")
+			c.JSON(restErr.Status(), restErr)
+			return
+		}
+
+		// Create new user with role from invitation
+		userData.Role = invitation.Role
+		newUser, restErr := handler.usersDao.Create(userData)
+		if restErr != nil {
+			fmt.Println("New user created:", restErr)
+			c.JSON(restErr.Status(), restErr)
+			return
+		}
+		user = newUser
 	}
 
 	// save session
@@ -171,7 +194,7 @@ func (handler *ssoHandler) Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, "Success")
 }
 
-func (handler *ssoHandler) RetrieveUserInfo(client *http.Client, token string) (*users.User, error) {
+func (handler *ssoHandler) RetrieveUserInfo(client *http.Client, token string) (*users.CreateUserPayload, error) {
 	userInfourl := os.Getenv("SSO_USER_INFO_URL") + "?access_token=" + token
 	response, err := client.Get(userInfourl)
 
@@ -193,7 +216,7 @@ func (handler *ssoHandler) RetrieveUserInfo(client *http.Client, token string) (
 		panic(err)
 	}
 
-	return &users.User{
+	return &users.CreateUserPayload{
 		Email:     data.Email,
 		FirstName: data.GivenName,
 		LastName:  data.FamilyName,

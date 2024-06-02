@@ -13,12 +13,12 @@ import (
 
 // MARK: UsersDao
 type UsersDao interface {
-	Create(*User) (*User, rest_errors.RestErr)
-	FindOrCreate(*User) (*User, rest_errors.RestErr)
+	Create(*CreateUserPayload) (*User, rest_errors.RestErr)
+	FindOrCreate(*CreateUserPayload) (*User, rest_errors.RestErr)
 	Update(*User, interface{}) (*User, rest_errors.RestErr)
 	Get(id *int64) (*User, rest_errors.RestErr)
 	AuthorizedCollection(url.Values, *User) (Users, rest_errors.RestErr)
-	Where(params map[string]interface{}) (*User, rest_errors.RestErr)
+	Where(params map[string]interface{}) *User
 }
 
 type connection struct {
@@ -46,7 +46,7 @@ func (user *User) Validate() rest_errors.RestErr {
 	return nil
 }
 
-func (connection *connection) Create(payload *User) (*User, rest_errors.RestErr) {
+func (connection *connection) Create(payload *CreateUserPayload) (*User, rest_errors.RestErr) {
 	user := &User{}
 	sqlQuery := connection.sqlBuilder.Insert("users", payload)
 
@@ -62,9 +62,9 @@ func (connection *connection) Create(payload *User) (*User, rest_errors.RestErr)
 	return user, nil
 }
 
-func (connection *connection) FindOrCreate(userData *User) (*User, rest_errors.RestErr) {
+func (connection *connection) FindOrCreate(userData *CreateUserPayload) (*User, rest_errors.RestErr) {
 
-	user, _ := connection.Where(map[string]interface{}{
+	user := connection.Where(map[string]interface{}{
 		"email": userData.Email,
 	})
 
@@ -114,17 +114,17 @@ func (connection *connection) Get(id *int64) (*User, rest_errors.RestErr) {
 	return user, nil
 }
 
-func (connection *connection) Where(params map[string]interface{}) (*User, rest_errors.RestErr) {
+func (connection *connection) Where(params map[string]interface{}) *User {
 	user := &User{}
 
 	query := connection.sqlBuilder.SearchBy("users", params)
 	err := connection.db.Get(user, query)
 	if err != nil {
 		fmt.Println("Error Occured:", err)
-		return nil, rest_errors.NewNotFoundError("Sorry, user doesn't exist")
+		return nil
 	}
 
-	return user, nil
+	return user
 }
 
 func (connection *connection) AuthorizedCollection(params url.Values, user *User) (Users, rest_errors.RestErr) {
