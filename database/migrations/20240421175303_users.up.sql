@@ -16,4 +16,5 @@ CREATE TABLE
 CREATE TRIGGER update_user_updated_at BEFORE
 UPDATE ON users FOR EACH ROW EXECUTE PROCEDURE update_modified_column ();
 
+INSERT INTO users (role, first_name, last_name, email, avatar_url)  VALUES ('admin', 'Sakoz', 'Shr', 'sakomee@gmail.com'  , 'https://avatars.githubusercontent.com/u/47269277?v=4');    
 COMMIT;
