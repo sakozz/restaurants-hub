@@ -85,13 +85,11 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 	user := handler.usersDao.Where(map[string]interface{}{"email": userData.Email})
 	if user == nil {
 		// Check if user has a valid invitation
-		invitation := handler.invitationsDao.Where(map[string]interface{}{"email": userData.Email})
+
+		invitation := handler.validateInvitation(userData.Email, c)
 
 		// If user is not registered, check if user has a valid invitation
-		if invitation == nil || !invitation.IsValid() {
-			fmt.Println("User is not registered or no valid invitation", invitation.IsValid())
-			restErr := rest_errors.NewForbiddenError("User is not registered or no valid invitation")
-			c.JSON(restErr.Status(), restErr)
+		if invitation == nil {
 			return
 		}
 
@@ -226,4 +224,23 @@ func (handler *ssoHandler) RetrieveUserInfo(client *http.Client, token string) (
 
 func setCookie(c *gin.Context, session *users.Session) {
 	c.SetCookie(os.Getenv("AUTH_COOKIE_NAME"), session.AccessToken, 2000, "/", "localhost", false, false)
+}
+
+func (handler *ssoHandler) validateInvitation(email string, c *gin.Context) *invitations.Invitation {
+	// Check if user has a valid invitation
+	invitation := handler.invitationsDao.Where(map[string]interface{}{"email": email})
+
+	invitationErr := rest_errors.NewForbiddenError("User is not registered or no valid invitation")
+	// If user is not registered, check if user has a valid invitation
+	if invitation == nil || !invitation.IsValid() {
+		c.JSON(invitationErr.Status(), invitationErr)
+		return nil
+	}
+
+	if !invitation.IsValid() {
+		c.JSON(invitationErr.Status(), invitationErr)
+		return nil
+	}
+
+	return invitation
 }

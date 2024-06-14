@@ -1,4 +1,4 @@
-package users
+package structs
 
 import (
 	"slices"
@@ -28,12 +28,29 @@ var (
 	}
 )
 
-func (user *User) Can(action string, resource consts.ResourceType) bool {
+type BaseUser struct {
+	Id        int64       `json:"id" db:"id" goqu:"skipinsert"`
+	Email     string      `json:"email" db:"email"`
+	Role      consts.Role `json:"role" goqu:"skipinsert"`
+	FirstName string      `json:"firstName" db:"first_name"`
+	LastName  string      `json:"lastName" db:"last_name"`
+	AvatarURL string      `json:"avatarUrl" db:"avatar_url"`
+}
+
+func (user *BaseUser) Can(action string, resource consts.ResourceType) bool {
 	mappings := PermissionMappings[user.Role].(map[consts.ResourceType][]string)
 	permissions := mappings[resource]
 	return slices.Contains(permissions, action)
 }
 
-func (user *User) Permissions() interface{} {
+func (user *BaseUser) Permissions() interface{} {
 	return PermissionMappings[user.Role]
+}
+
+func (user *BaseUser) IsAdmin() bool {
+	return user.Role == consts.Admin
+}
+
+func (user *BaseUser) IsManager() bool {
+	return user.Role == consts.Manager
 }

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	consts "resturants-hub.com/m/v2/packages/const"
+	"resturants-hub.com/m/v2/packages/structs"
 	"resturants-hub.com/m/v2/packages/types"
 )
 
@@ -18,24 +19,13 @@ type SsoUserInfo struct {
 }
 
 type User struct {
-	Id        int64          `json:"id" db:"id" goqu:"skipinsert"`
-	Email     string         `json:"email" db:"email"`
-	Role      consts.Role    `json:"role" goqu:"skipinsert"`
-	FirstName string         `json:"firstName" db:"first_name"`
-	LastName  string         `json:"lastName" db:"last_name"`
-	AvatarURL string         `json:"avatarUrl" db:"avatar_url"`
+	structs.BaseUser
 	CreatedAt time.Time      `json:"createdAt" db:"created_at" goqu:"skipinsert"`
 	UpdatedAt time.Time      `json:"updatedAt" db:"updated_at" goqu:"skipinsert"`
 	DeletedAt types.NullTime `json:"deletedAt" db:"deleted_at" goqu:"skipinsert"`
 }
 
-type CreateUserPayload struct {
-	Email     string      `json:"email" db:"email"`
-	Role      consts.Role `json:"role" db:"role"`
-	FirstName string      `json:"firstName" db:"first_name"`
-	LastName  string      `json:"lastName" db:"last_name"`
-	AvatarURL string      `json:"avatarUrl" db:"avatar_url"`
-}
+type CreateUserPayload structs.BaseUser
 
 type LoginPayload struct {
 	Email    string `json:"email"`
@@ -75,11 +65,3 @@ const (
 
 type Users []User
 type ResponsePayloadType int64
-
-func (user *User) IsAdmin() bool {
-	return user.Role == consts.Admin
-}
-
-func (user *User) IsManager() bool {
-	return user.Role == consts.Manager
-}

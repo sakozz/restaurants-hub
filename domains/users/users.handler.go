@@ -20,17 +20,16 @@ type UsersHandler interface {
 }
 
 type usersHandler struct {
-	service     UsersService
-	dao         UsersDao
-	payload     jsonapi.RequestPayload
-	currentUser *User
+	service UsersService
+	dao     UsersDao
+	base    jsonapi.BaseHandler
 }
 
 func NewUsersHandler() UsersHandler {
 	return &usersHandler{
 		service: NewUsersService(),
 		dao:     NewUserDao(),
-		payload: jsonapi.NewParamsHandler(),
+		base:    jsonapi.NewBaseHandler(),
 	}
 }
 
@@ -49,7 +48,7 @@ func (ctr *usersHandler) Create(c *gin.Context) {
 	json.Unmarshal(data, &mapBody)
 
 	/* Parse jsonapi payload and set attributes to data*/
-	payload := ctr.payload.SetData(mapBody)
+	payload := ctr.base.SetData(mapBody)
 	newRecord := &CreateUserPayload{}
 	mapstructure.Decode(payload.Data, &newRecord)
 
@@ -177,7 +176,7 @@ func (ctr *usersHandler) Update(c *gin.Context) {
 
 	/* Validate required params and whitelisted payload data */
 	json.Unmarshal(jsonData, &mapBody)
-	payload := ctr.payload.SetData(mapBody)
+	payload := ctr.base.SetData(mapBody)
 	payload.Require([]string{"id"}).Permit(user.UpdableAttributes())
 
 	/* Skip empty data and patch with only new data if the update is partial(PATCH) */
@@ -226,7 +225,7 @@ func (ctr *usersHandler) List(c *gin.Context) {
 	}
 
 	params := jsonapi.WhitelistQueryParams(c, []string{"first_name", "email", "id", "last_name"})
-	result, err := ctr.dao.AuthorizedCollection(params, ctr.currentUser)
+	result, err := ctr.dao.AuthorizedCollection(params, ctr.base.CurrentUser(c))
 	if err != nil {
 		c.JSON(err.Status(), err)
 		return

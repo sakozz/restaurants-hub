@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/mapstructure"
-	"resturants-hub.com/m/v2/domains/users"
 	"resturants-hub.com/m/v2/jsonapi"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
@@ -20,15 +19,14 @@ type InvitationsHandler interface {
 }
 
 type invitationsHandler struct {
-	dao         InvitationsDao
-	payload     jsonapi.RequestPayload
-	currentUser *users.User
+	dao  InvitationsDao
+	base jsonapi.BaseHandler
 }
 
 func NewInvitationsHandler() InvitationsHandler {
 	return &invitationsHandler{
-		dao:     NewInvitationDao(),
-		payload: jsonapi.NewParamsHandler(),
+		dao:  NewInvitationDao(),
+		base: jsonapi.NewBaseHandler(),
 	}
 }
 
@@ -47,7 +45,7 @@ func (ctr *invitationsHandler) Create(c *gin.Context) {
 	json.Unmarshal(data, &mapBody)
 
 	/* Parse jsonapi payload and set attributes to data*/
-	payload := ctr.payload.SetData(mapBody)
+	payload := ctr.base.SetData(mapBody)
 	newRecord := &CreateInvitationPayload{}
 	mapstructure.Decode(payload.Data, &newRecord)
 
@@ -144,7 +142,7 @@ func (ctr *invitationsHandler) Update(c *gin.Context) {
 
 	/* Validate required params and whitelisted payload data */
 	json.Unmarshal(jsonData, &mapBody)
-	payload := ctr.payload.SetData(mapBody)
+	payload := ctr.base.SetData(mapBody)
 	payload.Require([]string{"id"}).Permit(invitation.UpdableAttributes())
 
 	/* Skip empty data and patch with only new data if the update is partial(PATCH) */
@@ -179,7 +177,7 @@ func (ctr *invitationsHandler) List(c *gin.Context) {
 	}
 
 	params := jsonapi.WhitelistQueryParams(c, []string{"email", "token", "expires_at"})
-	result, err := ctr.dao.AuthorizedCollection(params, ctr.currentUser)
+	result, err := ctr.dao.AuthorizedCollection(params, ctr.base.CurrentUser(c))
 	if err != nil {
 		c.JSON(err.Status(), err)
 		return

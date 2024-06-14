@@ -7,8 +7,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/mitchellh/mapstructure"
 	"resturants-hub.com/m/v2/database"
-	"resturants-hub.com/m/v2/domains/users"
 	consts "resturants-hub.com/m/v2/packages/const"
+	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
@@ -20,7 +20,7 @@ type connection struct {
 type RestaurantDao interface {
 	Create(*CreateRestaurantPayload) (*Restaurant, rest_errors.RestErr)
 	Search(url.Values) (Restaurants, rest_errors.RestErr)
-	AuthorizedCollection(url.Values, *users.User) (Restaurants, rest_errors.RestErr)
+	AuthorizedCollection(url.Values, *structs.BaseUser) (Restaurants, rest_errors.RestErr)
 	Get(id *int64) (*Restaurant, rest_errors.RestErr)
 	Update(*Restaurant, interface{}) (*Restaurant, rest_errors.RestErr)
 }
@@ -71,7 +71,7 @@ func (connection *connection) Search(params url.Values) (Restaurants, rest_error
 	return restaurants, nil
 }
 
-func (connection *connection) AuthorizedCollection(params url.Values, user *users.User) (Restaurants, rest_errors.RestErr) {
+func (connection *connection) AuthorizedCollection(params url.Values, user *structs.BaseUser) (Restaurants, rest_errors.RestErr) {
 	switch user.Role {
 	case consts.Admin:
 		return connection.Search(params)

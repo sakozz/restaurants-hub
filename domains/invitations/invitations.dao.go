@@ -6,8 +6,8 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"resturants-hub.com/m/v2/database"
-	"resturants-hub.com/m/v2/domains/users"
 	consts "resturants-hub.com/m/v2/packages/const"
+	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
@@ -17,7 +17,7 @@ type InvitationsDao interface {
 	Update(*Invitation, interface{}) (*Invitation, rest_errors.RestErr)
 	Get(id *int64) (*Invitation, rest_errors.RestErr)
 	Where(params map[string]interface{}) *Invitation
-	AuthorizedCollection(url.Values, *users.User) (Invitations, rest_errors.RestErr)
+	AuthorizedCollection(url.Values, *structs.BaseUser) (Invitations, rest_errors.RestErr)
 }
 
 type connection struct {
@@ -90,7 +90,7 @@ func (connection *connection) Where(params map[string]interface{}) *Invitation {
 	return invitation
 }
 
-func (connection *connection) AuthorizedCollection(params url.Values, user *users.User) (Invitations, rest_errors.RestErr) {
+func (connection *connection) AuthorizedCollection(params url.Values, user *structs.BaseUser) (Invitations, rest_errors.RestErr) {
 	switch user.Role {
 	case consts.Admin:
 		return connection.search(params)

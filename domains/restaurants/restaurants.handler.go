@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/mapstructure"
-	"resturants-hub.com/m/v2/domains/users"
 	"resturants-hub.com/m/v2/jsonapi"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
@@ -21,15 +20,14 @@ type RestaurantsHandler interface {
 }
 
 type restaurantsHandler struct {
-	dao         RestaurantDao
-	payload     jsonapi.RequestPayload
-	currentUser *users.User
+	dao  RestaurantDao
+	base jsonapi.BaseHandler
 }
 
 func NewAdminRestaurantsHandler() RestaurantsHandler {
 	return &restaurantsHandler{
-		dao:     NewRestaurantDao(),
-		payload: jsonapi.NewParamsHandler(),
+		dao:  NewRestaurantDao(),
+		base: jsonapi.NewBaseHandler(),
 	}
 }
 
@@ -48,7 +46,7 @@ func (ctr *restaurantsHandler) Create(c *gin.Context) {
 	json.Unmarshal(data, &mapBody)
 
 	/* Parse jsonapi payload and set attributes to data*/
-	payload := ctr.payload.SetData(mapBody)
+	payload := ctr.base.SetData(mapBody)
 	newRestaurant := &CreateRestaurantPayload{}
 	mapstructure.Decode(payload.Data, &newRestaurant)
 
@@ -175,7 +173,7 @@ func (ctr *restaurantsHandler) Update(c *gin.Context) {
 
 	/* Validate required params and whitelisted payload data */
 	json.Unmarshal(jsonData, &mapBody)
-	payload := ctr.payload.SetData(mapBody)
+	payload := ctr.base.SetData(mapBody)
 	payload.Permit(record.AdminUpdableAttributes())
 
 	/* Skip empty data and patch with only new data if the update is partial(PATCH) */
@@ -212,7 +210,7 @@ func (ctr *restaurantsHandler) List(c *gin.Context) {
 	params := jsonapi.WhitelistQueryParams(c, []string{"user_id", "name", "email", "phone"})
 
 	// Get authorized collection of restaurants
-	result, err := ctr.dao.AuthorizedCollection(params, ctr.currentUser)
+	result, err := ctr.dao.AuthorizedCollection(params, ctr.base.CurrentUser(c))
 	if err != nil {
 		c.JSON(err.Status(), err)
 		return

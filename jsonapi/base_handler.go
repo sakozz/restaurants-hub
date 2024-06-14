@@ -9,22 +9,24 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"golang.org/x/exp/slices"
+	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
-type RequestPayload interface {
-	Require([]string) *payloadHandler
-	Permit([]string) *payloadHandler
-	SetData(map[string]interface{}) *payloadHandler
+type BaseHandler interface {
+	Require([]string) *baseHandler
+	Permit([]string) *baseHandler
+	SetData(map[string]interface{}) *baseHandler
+	CurrentUser(*gin.Context) *structs.BaseUser
 }
 
-type payloadHandler struct {
+type baseHandler struct {
 	Data   map[string]interface{}
 	Errors []rest_errors.RestErr
 }
 
-func NewParamsHandler() RequestPayload {
-	return &payloadHandler{}
+func NewBaseHandler() BaseHandler {
+	return &baseHandler{}
 }
 
 func WhitelistQueryParams(c *gin.Context, allowdKeys []string) url.Values {
@@ -52,7 +54,7 @@ func GetIdFromUrl(c *gin.Context, fromQuery bool) (int64, rest_errors.RestErr) {
 	return id, nil
 }
 
-func (p *payloadHandler) Require(attrs []string) *payloadHandler {
+func (p *baseHandler) Require(attrs []string) *baseHandler {
 	p.Errors = []rest_errors.RestErr{}
 	for _, attr := range attrs {
 		if p.Data[attr] == nil {
@@ -63,7 +65,7 @@ func (p *payloadHandler) Require(attrs []string) *payloadHandler {
 	return p
 }
 
-func (p *payloadHandler) Permit(attrs []string) *payloadHandler {
+func (p *baseHandler) Permit(attrs []string) *baseHandler {
 	for key, _ := range p.Data {
 		if !slices.Contains(attrs, key) {
 			delete(p.Data, key)
@@ -72,7 +74,7 @@ func (p *payloadHandler) Permit(attrs []string) *payloadHandler {
 	return p
 }
 
-func (p *payloadHandler) ClearEmpty() {
+func (p *baseHandler) ClearEmpty() {
 	for key, value := range p.Data {
 		if value == nil || value == "" {
 			delete(p.Data, key)
@@ -80,7 +82,7 @@ func (p *payloadHandler) ClearEmpty() {
 	}
 }
 
-func (p *payloadHandler) SetData(payload map[string]interface{}) *payloadHandler {
+func (p *baseHandler) SetData(payload map[string]interface{}) *baseHandler {
 	p.Errors = []rest_errors.RestErr{}
 	data := payload["data"].(map[string]interface{})
 	attributes := data["attributes"].(map[string]interface{})
@@ -90,6 +92,15 @@ func (p *payloadHandler) SetData(payload map[string]interface{}) *payloadHandler
 
 	p.Data = attributes
 	return p
+}
+
+func (p *baseHandler) CurrentUser(c *gin.Context) *structs.BaseUser {
+	// Get current user from context
+	userData, ok := c.Get("currentUser")
+	if !ok {
+		return nil
+	}
+	return userData.(*structs.BaseUser)
 }
 
 var (

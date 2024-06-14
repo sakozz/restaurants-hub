@@ -17,9 +17,9 @@ type Invitation struct {
 }
 
 type CreateInvitationPayload struct {
-	Email string      `json:"email" db:"email"`
+	Email string      `json:"email" db:"email" validate:"required"`
 	Token string      `json:"token" db:"token"`
-	Role  consts.Role `json:"role" goqu:"skipinsert"`
+	Role  consts.Role `json:"role" db:"role" validate:"required"`
 }
 
 type Invitations []Invitation

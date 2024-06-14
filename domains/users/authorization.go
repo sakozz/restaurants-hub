@@ -3,11 +3,12 @@ package users
 import (
 	"github.com/gin-gonic/gin"
 	consts "resturants-hub.com/m/v2/packages/const"
+	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
 type authorizer struct {
-	currentUser *User
+	currentUser *structs.BaseUser
 	resource    *User
 }
 
@@ -43,16 +44,8 @@ type permissions struct {
 
 func (ctr *usersHandler) Authorize(action string, resource *User, c *gin.Context) (interface{}, rest_errors.RestErr) {
 
-	// Get current user from context
-	userData, ok := c.Get("currentUser")
-	if !ok {
-		return nil, rest_errors.NewUnauthorizedError("unauthorized")
-	}
-
-	ctr.currentUser = userData.(*User)
-
 	authorizer := &authorizer{
-		currentUser: ctr.currentUser,
+		currentUser: ctr.base.CurrentUser(c),
 		resource:    resource,
 	}
 
@@ -65,9 +58,9 @@ func (ctr *usersHandler) Authorize(action string, resource *User, c *gin.Context
 	var hasPermission bool
 	switch action {
 	case "accessCollection":
-		hasPermission = ctr.currentUser.Can("accessCollection", consts.Users)
+		hasPermission = ctr.base.CurrentUser(c).Can("accessCollection", consts.Users)
 	case "create":
-		hasPermission = ctr.currentUser.Can("create", consts.Users)
+		hasPermission = ctr.base.CurrentUser(c).Can("create", consts.Users)
 	case "access":
 		hasPermission = permissions.CanAccess
 	case "update":

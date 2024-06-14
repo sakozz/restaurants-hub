@@ -8,6 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"resturants-hub.com/m/v2/database"
 	consts "resturants-hub.com/m/v2/packages/const"
+	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
@@ -17,7 +18,8 @@ type UsersDao interface {
 	FindOrCreate(*CreateUserPayload) (*User, rest_errors.RestErr)
 	Update(*User, interface{}) (*User, rest_errors.RestErr)
 	Get(id *int64) (*User, rest_errors.RestErr)
-	AuthorizedCollection(url.Values, *User) (Users, rest_errors.RestErr)
+	GetSessionUser(id *int64) (*structs.BaseUser, rest_errors.RestErr)
+	AuthorizedCollection(url.Values, *structs.BaseUser) (Users, rest_errors.RestErr)
 	Where(params map[string]interface{}) *User
 }
 
@@ -114,6 +116,19 @@ func (connection *connection) Get(id *int64) (*User, rest_errors.RestErr) {
 	return user, nil
 }
 
+func (connection *connection) GetSessionUser(id *int64) (*structs.BaseUser, rest_errors.RestErr) {
+	user := &User{}
+	query := connection.sqlBuilder.Find("users", map[string]interface{}{"id": id})
+	err := connection.db.Get(user, query)
+
+	if err != nil {
+		message := fmt.Sprintf("Sorry, user with id %v doesn't exist", *id)
+		return nil, rest_errors.NewNotFoundError(message)
+	}
+
+	return &user.BaseUser, nil
+}
+
 func (connection *connection) Where(params map[string]interface{}) *User {
 	user := &User{}
 
@@ -127,7 +142,7 @@ func (connection *connection) Where(params map[string]interface{}) *User {
 	return user
 }
 
-func (connection *connection) AuthorizedCollection(params url.Values, user *User) (Users, rest_errors.RestErr) {
+func (connection *connection) AuthorizedCollection(params url.Values, user *structs.BaseUser) (Users, rest_errors.RestErr) {
 	switch user.Role {
 	case consts.Admin:
 		return connection.search(params)
