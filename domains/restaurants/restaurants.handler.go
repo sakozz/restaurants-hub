@@ -50,6 +50,11 @@ func (ctr *restaurantsHandler) Create(c *gin.Context) {
 	newRestaurant := &CreateRestaurantPayload{}
 	mapstructure.Decode(payload.Data, &newRestaurant)
 
+	/* if currentUser is not admin, set managerId to current user */
+	if !ctr.base.CurrentUser(c).IsAdmin() {
+		newRestaurant.ManagerId = ctr.base.CurrentUser(c).Id
+	}
+
 	/* Authorize request for current user */
 	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), newRestaurant.ManagerId)
 	permissions, restErr := authorizer.Authorize("create")

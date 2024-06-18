@@ -3,7 +3,7 @@ BEGIN;
 CREATE TABLE
     IF NOT EXISTS restaurants (
         id serial PRIMARY KEY,
-        manager_id int NOT NULL,
+        manager_id int UNIQUE NOT NULL,
         name VARCHAR(50) NOT NULL,
         description VARCHAR(5000) NOT NULL,
         address JSONB DEFAULT '{}'::jsonb,
