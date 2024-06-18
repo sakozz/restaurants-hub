@@ -60,10 +60,11 @@ func mapRoutes() {
 	}
 
 	/* Manager's Restaurant routes */
-	restaurantRoutes := router.Group("/api/:slug", middleware.RequireAuth)
+	restaurantsRoutes := router.Group("/api/my-restaurant", middleware.RequireAuth)
 	{
-		restaurantRoutes.GET("/", restaurantsHandler.MyRestaurant)
+		restaurantsRoutes.GET("/", restaurantsHandler.MyRestaurant)
 	}
+
 	/* Auth routes */
 	authRoutes := router.Group("/api/auth")
 	{

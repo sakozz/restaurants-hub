@@ -51,7 +51,8 @@ func (ctr *restaurantsHandler) Create(c *gin.Context) {
 	mapstructure.Decode(payload.Data, &newRestaurant)
 
 	/* Authorize request for current user */
-	permissions, restErr := ctr.Authorize("create", nil, c)
+	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), newRestaurant.ManagerId)
+	permissions, restErr := authorizer.Authorize("create")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return
@@ -92,7 +93,8 @@ func (ctr *restaurantsHandler) Get(c *gin.Context) {
 	}
 
 	/* Authorize access to resource */
-	permissions, restErr := ctr.Authorize("access", restaurant, c)
+	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), restaurant.ManagerId)
+	permissions, restErr := authorizer.Authorize("access")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return
@@ -109,20 +111,15 @@ func (ctr *restaurantsHandler) Get(c *gin.Context) {
 
 func (ctr *restaurantsHandler) MyRestaurant(c *gin.Context) {
 
-	id, idErr := jsonapi.GetIdFromUrl(c, false)
-	if idErr != nil {
-		c.JSON(idErr.Status(), idErr)
-		return
-	}
-
-	restaurant, getErr := ctr.dao.Get(&id)
+	restaurant, getErr := ctr.dao.RestaurantByOwnerId(&ctr.base.CurrentUser(c).Id)
 	if getErr != nil {
 		c.JSON(getErr.Status(), getErr)
 		return
 	}
 
 	/* Authorize access to resource */
-	permissions, restErr := ctr.Authorize("access", restaurant, c)
+	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), restaurant.ManagerId)
+	permissions, restErr := authorizer.Authorize("access")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return
@@ -132,7 +129,7 @@ func (ctr *restaurantsHandler) MyRestaurant(c *gin.Context) {
 		"permissions": permissions,
 	}
 
-	resource := restaurant.MemberFor(AdminDetails)
+	resource := restaurant.MemberFor(OwnerDetails)
 	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
@@ -152,7 +149,8 @@ func (ctr *restaurantsHandler) Update(c *gin.Context) {
 	}
 
 	/* Authorize request for current user */
-	permissions, restErr := ctr.Authorize("access", record, c)
+	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), record.ManagerId)
+	permissions, restErr := authorizer.Authorize("access")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return
@@ -201,7 +199,8 @@ func (ctr *restaurantsHandler) Update(c *gin.Context) {
 
 func (ctr *restaurantsHandler) List(c *gin.Context) {
 	/* Authorize request for current user */
-	_, restErr := ctr.Authorize("accessCollection", nil, c)
+	authorizer := NewAuthorizer(ctr.base.CurrentUser(c))
+	_, restErr := authorizer.Authorize("accessCollection")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return

@@ -1,34 +1,44 @@
 package restaurants
 
 import (
-	"github.com/gin-gonic/gin"
 	consts "resturants-hub.com/m/v2/packages/const"
 	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
-type authorizer struct {
-	currentUser *structs.BaseUser
-	restaurant  *Restaurant
+type Authorizor interface {
+	Authorize(string) (interface{}, rest_errors.RestErr)
+	AuthorizeAccess() bool
+	AuthorizeUpdate() bool
+	AuthorizeDelete() bool
+	UserOwnsResource() bool
+}
+type authUser struct {
+	*structs.BaseUser
+	ManagerId int64
 }
 
-func (auth *authorizer) AuthorizeAccess() bool {
-	return auth.currentUser.IsAdmin() || (auth.currentUser.IsManager() && auth.userOwnsResource())
-}
-
-func (auth *authorizer) AuthorizeUpdate() bool {
-	return auth.currentUser.IsAdmin()
-}
-
-func (auth *authorizer) AuthorizeDelete() bool {
-	return auth.currentUser.IsAdmin()
-}
-
-func (auth *authorizer) userOwnsResource() bool {
-	if auth.restaurant == nil || auth.currentUser == nil {
-		return false
+func NewAuthorizer(currentUser *structs.BaseUser, managerId ...int64) Authorizor {
+	if managerId == nil {
+		managerId[0] = -1
 	}
-	return auth.currentUser.Id == auth.restaurant.ManagerId
+	return &authUser{currentUser, managerId[0]}
+}
+
+func (auth *authUser) AuthorizeAccess() bool {
+	return auth.IsAdmin() || (auth.IsManager() && auth.UserOwnsResource())
+}
+
+func (auth *authUser) AuthorizeUpdate() bool {
+	return auth.IsAdmin()
+}
+
+func (auth *authUser) AuthorizeDelete() bool {
+	return auth.IsAdmin()
+}
+
+func (auth *authUser) UserOwnsResource() bool {
+	return auth.Id == auth.ManagerId
 }
 
 /*
@@ -42,25 +52,19 @@ type permissions struct {
 	CanDelete bool `json:"canDelete"`
 }
 
-func (ctr *restaurantsHandler) Authorize(action string, resource *Restaurant, c *gin.Context) (interface{}, rest_errors.RestErr) {
-
-	authorizer := &authorizer{
-		currentUser: ctr.base.CurrentUser(c),
-		restaurant:  resource,
-	}
-
+func (auth *authUser) Authorize(action string) (interface{}, rest_errors.RestErr) {
 	permissions := &permissions{
-		CanAccess: authorizer.AuthorizeAccess(),
-		CanUpdate: authorizer.AuthorizeUpdate(),
-		CanDelete: authorizer.AuthorizeDelete(),
+		CanAccess: auth.AuthorizeAccess(),
+		CanUpdate: auth.AuthorizeUpdate(),
+		CanDelete: auth.AuthorizeDelete(),
 	}
 
 	var hasPermission bool
 	switch action {
 	case "accessCollection":
-		hasPermission = ctr.base.CurrentUser(c).Can("accessCollection", consts.Restaurants)
+		hasPermission = auth.Can("accessCollection", consts.Restaurants)
 	case "create":
-		hasPermission = ctr.base.CurrentUser(c).Can("create", consts.Restaurants)
+		hasPermission = auth.Can("create", consts.Restaurants)
 	case "access":
 		hasPermission = permissions.CanAccess
 	case "update":

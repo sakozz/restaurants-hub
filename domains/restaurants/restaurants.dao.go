@@ -22,6 +22,7 @@ type RestaurantDao interface {
 	Search(url.Values) (Restaurants, rest_errors.RestErr)
 	AuthorizedCollection(url.Values, *structs.BaseUser) (Restaurants, rest_errors.RestErr)
 	Get(id *int64) (*Restaurant, rest_errors.RestErr)
+	RestaurantByOwnerId(*int64) (*Restaurant, rest_errors.RestErr)
 	Update(*Restaurant, interface{}) (*Restaurant, rest_errors.RestErr)
 }
 
@@ -47,6 +48,7 @@ func (connection *connection) Create(payload *CreateRestaurantPayload) (*Restaur
 	row.StructScan(restaurant)
 	return restaurant, nil
 }
+
 func (connection *connection) Get(id *int64) (*Restaurant, rest_errors.RestErr) {
 	restaurant := &Restaurant{}
 	query := connection.sqlBuilder.Find("restaurants", map[string]interface{}{"id": id})
@@ -54,6 +56,20 @@ func (connection *connection) Get(id *int64) (*Restaurant, rest_errors.RestErr) 
 
 	if err != nil {
 		message := fmt.Sprintf("Sorry, the record with id %v doesn't exist", *id)
+		return nil, rest_errors.NewNotFoundError(message)
+	}
+
+	return restaurant, nil
+}
+
+func (connection *connection) RestaurantByOwnerId(id *int64) (*Restaurant, rest_errors.RestErr) {
+	restaurant := &Restaurant{}
+	params := map[string]interface{}{"manager_id": id}
+
+	query := connection.sqlBuilder.SearchBy(string(consts.Restaurants), params)
+	err := connection.db.Get(restaurant, query)
+	if err != nil {
+		message := fmt.Sprintf("Sorry, the record with id doesn't exist")
 		return nil, rest_errors.NewNotFoundError(message)
 	}
 

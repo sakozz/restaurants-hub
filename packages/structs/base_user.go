@@ -16,7 +16,7 @@ var (
 			consts.Invitations: {"accessCollection", "accessMember", "create"},
 		},
 		consts.Manager: map[consts.ResourceType][]string{
-			consts.Restaurants: {"accessMember"},
+			consts.Restaurants: {"accessMember", "create"},
 			consts.Users:       {"accessMember"},
 			consts.Invitations: {},
 		},
