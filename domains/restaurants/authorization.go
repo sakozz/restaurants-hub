@@ -20,7 +20,7 @@ type authUser struct {
 
 func NewAuthorizer(currentUser *structs.BaseUser, managerId ...int64) Authorizor {
 	if managerId == nil {
-		managerId[0] = -1
+		managerId = []int64{0}
 	}
 	return &authUser{currentUser, managerId[0]}
 }

@@ -1,66 +1,67 @@
 package users
 
 import (
-	"github.com/gin-gonic/gin"
 	consts "resturants-hub.com/m/v2/packages/const"
 	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
-type authorizer struct {
-	currentUser *structs.BaseUser
-	resource    *User
+type Authorizor interface {
+	Authorize(string) (interface{}, rest_errors.RestErr)
+	AuthorizeAccess() bool
+	AuthorizeUpdate() bool
+	AuthorizeDelete() bool
+	userIsSelf() bool
 }
 
-func (auth *authorizer) AuthorizeAccess() bool {
-	return auth.currentUser.IsAdmin() || (auth.currentUser.IsManager() && auth.userIsSelf())
-}
-
-func (auth *authorizer) AuthorizeUpdate() bool {
-	return auth.currentUser.IsAdmin()
-}
-
-func (auth *authorizer) AuthorizeDelete() bool {
-	return auth.currentUser.IsAdmin()
-}
-
-func (auth *authorizer) userIsSelf() bool {
-	if auth.resource == nil || auth.currentUser == nil {
-		return false
-	}
-	return auth.currentUser.Id == auth.resource.Id
-}
-
-/*
-Use this permissions and authorization for member resource only
-The idea is to authorize the user based on the action they want to perform on the resource.
-Authorization for collection/list of resources is handled in the handler via the AuthorizeCollection method
-*/
 type permissions struct {
 	CanAccess bool `json:"canAccess"`
 	CanUpdate bool `json:"canUpdate"`
 	CanDelete bool `json:"canDelete"`
 }
 
-func (ctr *usersHandler) Authorize(action string, resource *User, c *gin.Context) (interface{}, rest_errors.RestErr) {
+type authUser struct {
+	*structs.BaseUser
+	UserId int64
+}
 
-	authorizer := &authorizer{
-		currentUser: ctr.base.CurrentUser(c),
-		resource:    resource,
+func NewAuthorizer(currentUser *structs.BaseUser, userId ...int64) Authorizor {
+	if userId == nil {
+		userId = append(userId, -1)
 	}
+	return &authUser{currentUser, userId[0]}
+}
+
+func (auth *authUser) AuthorizeAccess() bool {
+	return auth.IsAdmin() || (auth.IsManager() && auth.userIsSelf())
+}
+
+func (auth *authUser) AuthorizeUpdate() bool {
+	return auth.IsAdmin()
+}
+
+func (auth *authUser) AuthorizeDelete() bool {
+	return auth.IsAdmin()
+}
+
+func (auth *authUser) userIsSelf() bool {
+	return auth.Id == auth.UserId
+}
+
+func (auth *authUser) Authorize(action string) (interface{}, rest_errors.RestErr) {
 
 	permissions := &permissions{
-		CanAccess: authorizer.AuthorizeAccess(),
-		CanUpdate: authorizer.AuthorizeUpdate(),
-		CanDelete: authorizer.AuthorizeDelete(),
+		CanAccess: auth.AuthorizeAccess(),
+		CanUpdate: auth.AuthorizeUpdate(),
+		CanDelete: auth.AuthorizeDelete(),
 	}
 
 	var hasPermission bool
 	switch action {
 	case "accessCollection":
-		hasPermission = ctr.base.CurrentUser(c).Can("accessCollection", consts.Users)
+		hasPermission = auth.Can("accessCollection", consts.Users)
 	case "create":
-		hasPermission = ctr.base.CurrentUser(c).Can("create", consts.Users)
+		hasPermission = auth.Can("create", consts.Users)
 	case "access":
 		hasPermission = permissions.CanAccess
 	case "update":

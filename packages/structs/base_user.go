@@ -31,7 +31,7 @@ var (
 type BaseUser struct {
 	Id        int64       `json:"id" db:"id" goqu:"skipinsert"`
 	Email     string      `json:"email" db:"email"`
-	Role      consts.Role `json:"role" goqu:"skipinsert"`
+	Role      consts.Role `json:"role" db:"role"`
 	FirstName string      `json:"firstName" db:"first_name"`
 	LastName  string      `json:"lastName" db:"last_name"`
 	AvatarURL string      `json:"avatarUrl" db:"avatar_url"`

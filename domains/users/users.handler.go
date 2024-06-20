@@ -53,7 +53,8 @@ func (ctr *usersHandler) Create(c *gin.Context) {
 	mapstructure.Decode(payload.Data, &newRecord)
 
 	/* Authorize request for current user */
-	permissions, restErr := ctr.Authorize("create", nil, c)
+	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), newRecord.Id)
+	permissions, restErr := authorizer.Authorize("create")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return
@@ -93,7 +94,8 @@ func (ctr *usersHandler) Get(c *gin.Context) {
 	}
 
 	/* Authorize access to resource */
-	permissions, restErr := ctr.Authorize("access", user, c)
+	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), user.Id)
+	permissions, restErr := authorizer.Authorize("access")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return
@@ -124,7 +126,8 @@ func (ctr *usersHandler) Profile(c *gin.Context) {
 	}
 
 	/* Authorize access to resource */
-	permissions, restErr := ctr.Authorize("access", user, c)
+	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), user.Id)
+	permissions, restErr := authorizer.Authorize("access")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return
@@ -155,7 +158,8 @@ func (ctr *usersHandler) Update(c *gin.Context) {
 	}
 
 	/* Authorize access to resource */
-	permissions, restErr := ctr.Authorize("update", user, c)
+	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), user.Id)
+	permissions, restErr := authorizer.Authorize("update")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return
@@ -202,23 +206,10 @@ func (ctr *usersHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, jsonapi)
 }
 
-func (ctr *usersHandler) Delete(c *gin.Context) {
-	// userId, idErr := getUserId(c.Param("user_id"))
-	// if idErr != nil {
-	// 	c.JSON(idErr.Status(), idErr)
-	// 	return
-	// }
-
-	// if err := services.UsersService.DeleteUser(userId); err != nil {
-	// 	c.JSON(err.Status(), err)
-	// 	return
-	// }
-	// c.JSON(http.StatusOK, map[string]string{"status": "deleted"})
-}
-
 func (ctr *usersHandler) List(c *gin.Context) {
 	/* Authorize request for current user */
-	_, restErr := ctr.Authorize("accessCollection", nil, c)
+	authorizer := NewAuthorizer(ctr.base.CurrentUser(c))
+	_, restErr := authorizer.Authorize("accessCollection")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return
