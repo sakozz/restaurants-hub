@@ -4,6 +4,7 @@ import (
 	"slices"
 
 	consts "resturants-hub.com/m/v2/packages/const"
+	"resturants-hub.com/m/v2/packages/types"
 )
 
 type PermissionsMap map[consts.Role]interface{}
@@ -14,11 +15,13 @@ var (
 			consts.Restaurants: {"accessCollection", "accessMember", "create"},
 			consts.Users:       {"accessCollection", "accessMember", "create"},
 			consts.Invitations: {"accessCollection", "accessMember", "create"},
+			consts.Pages:       {"accessCollection", "accessMember", "create"},
 		},
 		consts.Manager: map[consts.ResourceType][]string{
 			consts.Restaurants: {"accessMember", "create"},
 			consts.Users:       {"accessMember"},
 			consts.Invitations: {},
+			consts.Pages:       {"accessCollection", "accessMember", "create"},
 		},
 		consts.Public: map[consts.ResourceType][]string{
 			consts.Restaurants: {},
@@ -29,12 +32,13 @@ var (
 )
 
 type BaseUser struct {
-	Id        int64       `json:"id" db:"id" goqu:"skipinsert"`
-	Email     string      `json:"email" db:"email"`
-	Role      consts.Role `json:"role" db:"role"`
-	FirstName string      `json:"firstName" db:"first_name"`
-	LastName  string      `json:"lastName" db:"last_name"`
-	AvatarURL string      `json:"avatarUrl" db:"avatar_url"`
+	Id           int64         `json:"id" db:"id" goqu:"skipinsert"`
+	Email        string        `json:"email" db:"email"`
+	Role         consts.Role   `json:"role" db:"role"`
+	FirstName    string        `json:"firstName" db:"first_name"`
+	LastName     string        `json:"lastName" db:"last_name"`
+	AvatarURL    string        `json:"avatarUrl" db:"avatar_url"`
+	RestaurantId types.NullInt `json:"restaurantId" db:"restaurant_id"`
 }
 
 func (user *BaseUser) Can(action string, resource consts.ResourceType) bool {

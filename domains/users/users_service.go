@@ -22,7 +22,7 @@ type usersService struct {
 
 func NewUsersService() UsersService {
 	return &usersService{
-		dao: NewUserDao(),
+		dao: NewUsersDao(),
 	}
 }
 
@@ -37,7 +37,7 @@ func (service *usersService) GetUser(userId int64) (*User, rest_errors.RestErr) 
 
 func (service *usersService) UpdateUser(user *User, payload interface{}) (*User, rest_errors.RestErr) {
 
-	updatedUser, err := service.dao.Update(user, payload)
+	updatedUser, err := service.dao.Update(&user.Id, payload)
 	if err != nil {
 		return nil, err
 	}

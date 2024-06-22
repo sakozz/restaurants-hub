@@ -32,7 +32,7 @@ type ssoHandler struct {
 func NewSsoHandler() SsoHandler {
 	return &ssoHandler{
 		service:        NewSessionService(),
-		usersDao:       users.NewUserDao(),
+		usersDao:       users.NewUsersDao(),
 		invitationsDao: invitations.NewInvitationDao(),
 	}
 }

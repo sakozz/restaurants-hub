@@ -6,6 +6,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"resturants-hub.com/m/v2/domains/invitations"
+	"resturants-hub.com/m/v2/domains/pages"
 	"resturants-hub.com/m/v2/domains/restaurants"
 	"resturants-hub.com/m/v2/domains/sessions"
 	"resturants-hub.com/m/v2/domains/users"
@@ -17,6 +18,7 @@ var (
 	usersHandler       users.UsersHandler             = users.NewUsersHandler()
 	invitationsHandler invitations.InvitationsHandler = invitations.NewInvitationsHandler()
 	restaurantsHandler restaurants.RestaurantsHandler = restaurants.NewAdminRestaurantsHandler()
+	pagesHandler       pages.PagesHandler       = pages.NewPagesHandler()
 )
 
 func mapRoutes() {
@@ -64,6 +66,15 @@ func mapRoutes() {
 	{
 		restaurantsRoutes.GET("/", restaurantsHandler.MyRestaurant)
 	}
+
+
+		/* Pages routes */
+		pagesRoutes := router.Group("/api/pages", middleware.RequireAuth)
+		{
+			pagesRoutes.GET("/", pagesHandler.List)
+			pagesRoutes.POST("/", pagesHandler.Create)
+			pagesRoutes.GET("/:slug", pagesHandler.Get)
+		}
 
 	/* Auth routes */
 	authRoutes := router.Group("/api/auth")

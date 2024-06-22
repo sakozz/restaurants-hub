@@ -16,7 +16,7 @@ import (
 type UsersDao interface {
 	Create(*CreateUserPayload) (*User, rest_errors.RestErr)
 	FindOrCreate(*CreateUserPayload) (*User, rest_errors.RestErr)
-	Update(*User, interface{}) (*User, rest_errors.RestErr)
+	Update(id *int64, payload interface{}) (*User, rest_errors.RestErr)
 	Get(id *int64) (*User, rest_errors.RestErr)
 	GetSessionUser(id *int64) (*structs.BaseUser, rest_errors.RestErr)
 	AuthorizedCollection(url.Values, *structs.BaseUser) (Users, rest_errors.RestErr)
@@ -28,7 +28,7 @@ type connection struct {
 	sqlBuilder database.SqlBuilder
 }
 
-func NewUserDao() UsersDao {
+func NewUsersDao() UsersDao {
 	return &connection{
 		db:         database.DB,
 		sqlBuilder: database.NewSqlBuilder(),
@@ -90,8 +90,8 @@ func (connection *connection) FindOrCreate(userData *CreateUserPayload) (*User, 
 	return newUser, nil
 }
 
-func (connection *connection) Update(user *User, payload interface{}) (*User, rest_errors.RestErr) {
-	sqlQuery := connection.sqlBuilder.Update("users", &user.Id, payload)
+func (connection *connection) Update(id *int64, payload interface{}) (*User, rest_errors.RestErr) {
+	sqlQuery := connection.sqlBuilder.Update("users", id, payload)
 	row := connection.db.QueryRowx(sqlQuery)
 	if row.Err() != nil {
 		if uniquenessViolation, constraintName := database.HasUniquenessViolation(row.Err()); uniquenessViolation {
@@ -99,6 +99,7 @@ func (connection *connection) Update(user *User, payload interface{}) (*User, re
 		}
 		return nil, rest_errors.NewInternalServerError(row.Err())
 	}
+	user := &User{}
 	row.StructScan(user)
 	return user, nil
 }

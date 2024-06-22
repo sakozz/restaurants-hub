@@ -55,3 +55,28 @@ func (nt *NullTime) UnmarshalJSON(data []byte) error {
 	}
 	return nil
 }
+
+type NullInt struct {
+	sql.NullInt64
+}
+
+func (nInt NullInt) MarshalJSON() ([]byte, error) {
+	if nInt.Valid {
+		return json.Marshal(nInt.NullInt64.Int64)
+	}
+	return json.Marshal(nil)
+}
+
+func (nInt *NullInt) UnmarshalJSON(data []byte) error {
+	var i *sql.NullInt64
+	if err := json.Unmarshal(data, &i); err != nil {
+		return err
+	}
+	if i != nil {
+		nInt.Valid = true
+		nInt.NullInt64 = *i
+	} else {
+		nInt.Valid = false
+	}
+	return nil
+}

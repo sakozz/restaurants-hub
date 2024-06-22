@@ -14,4 +14,5 @@ const (
 	Restaurants ResourceType = "restaurants"
 	Users                    = "users"
 	Invitations              = "invitations"
+	Pages                    = "pages"
 )

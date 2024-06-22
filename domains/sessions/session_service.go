@@ -48,7 +48,7 @@ type sessionService struct {
 func NewSessionService() SessionService {
 	return &sessionService{
 		sessionDao: users.NewSessionDao(),
-		usersDao:   users.NewUserDao(),
+		usersDao:   users.NewUsersDao(),
 	}
 }
 

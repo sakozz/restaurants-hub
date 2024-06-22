@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/mapstructure"
+	"resturants-hub.com/m/v2/domains/users"
 	"resturants-hub.com/m/v2/jsonapi"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
@@ -20,14 +21,16 @@ type RestaurantsHandler interface {
 }
 
 type restaurantsHandler struct {
-	dao  RestaurantDao
-	base jsonapi.BaseHandler
+	dao      RestaurantDao
+	usersDao users.UsersDao
+	base     jsonapi.BaseHandler
 }
 
 func NewAdminRestaurantsHandler() RestaurantsHandler {
 	return &restaurantsHandler{
-		dao:  NewRestaurantDao(),
-		base: jsonapi.NewBaseHandler(),
+		dao:      NewRestaurantDao(),
+		usersDao: users.NewUsersDao(),
+		base:     jsonapi.NewBaseHandler(),
 	}
 }
 
@@ -50,13 +53,14 @@ func (ctr *restaurantsHandler) Create(c *gin.Context) {
 	newRestaurant := &CreateRestaurantPayload{}
 	mapstructure.Decode(payload.Data, &newRestaurant)
 
+	currentUser := ctr.base.CurrentUser(c)
 	/* if currentUser is not admin, set managerId to current user */
-	if !ctr.base.CurrentUser(c).IsAdmin() {
-		newRestaurant.ManagerId = ctr.base.CurrentUser(c).Id
+	if !currentUser.IsAdmin() {
+		newRestaurant.ManagerId = currentUser.Id
 	}
 
 	/* Authorize request for current user */
-	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), newRestaurant.ManagerId)
+	authorizer := NewAuthorizer(currentUser, newRestaurant.ManagerId)
 	permissions, restErr := authorizer.Authorize("create")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
@@ -78,6 +82,16 @@ func (ctr *restaurantsHandler) Create(c *gin.Context) {
 		c.JSON(getErr.Status(), getErr)
 		return
 	}
+
+	/* Set restaurantId to current user */
+	if !currentUser.IsAdmin() {
+		_, updateErr := ctr.usersDao.Update(&currentUser.Id, map[string]interface{}{"restaurant_id": restaurant.Id})
+		if updateErr != nil {
+			c.JSON(updateErr.Status(), updateErr)
+			return
+		}
+	}
+
 	resource := restaurant.MemberFor(AdminDetails)
 	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonPayload)

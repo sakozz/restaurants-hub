@@ -8,6 +8,7 @@ CREATE TABLE
         last_name VARCHAR(50) NOT NULL,
         email VARCHAR(300) UNIQUE NOT NULL,
         avatar_url VARCHAR(500),
+        restaurant_id int DEFAULT NULL,
         created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at timestamp NOT NULL DEFAULT now (),
         deleted_at timestamp

@@ -1,4 +1,4 @@
-package users
+package pages
 
 import (
 	"encoding/json"
@@ -11,29 +11,26 @@ import (
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
-type UsersHandler interface {
+type PagesHandler interface {
 	Create(c *gin.Context)
-	Update(c *gin.Context)
 	Get(c *gin.Context)
-	Profile(c *gin.Context)
 	List(c *gin.Context)
+	Update(c *gin.Context)
 }
 
-type usersHandler struct {
-	service UsersService
-	dao     UsersDao
-	base    jsonapi.BaseHandler
+type pagesHandler struct {
+	dao  PagesDao
+	base jsonapi.BaseHandler
 }
 
-func NewUsersHandler() UsersHandler {
-	return &usersHandler{
-		service: NewUsersService(),
-		dao:     NewUsersDao(),
-		base:    jsonapi.NewBaseHandler(),
+func NewPagesHandler() PagesHandler {
+	return &pagesHandler{
+		dao:  NewPageDao(),
+		base: jsonapi.NewBaseHandler(),
 	}
 }
 
-func (ctr *usersHandler) Create(c *gin.Context) {
+func (ctr *pagesHandler) Create(c *gin.Context) {
 
 	/* Extract request body as map */
 	var mapBody map[string]interface{}
@@ -49,11 +46,16 @@ func (ctr *usersHandler) Create(c *gin.Context) {
 
 	/* Parse jsonapi payload and set attributes to data*/
 	payload := ctr.base.SetData(mapBody)
-	newRecord := &CreateUserPayload{}
+	newRecord := &CreatePagePayload{}
 	mapstructure.Decode(payload.Data, &newRecord)
 
+	/* if currentUser is not admin, set managerId to current user */
+	if !ctr.base.CurrentUser(c).IsAdmin() {
+		newRecord.AuthorId = ctr.base.CurrentUser(c).Id
+	}
+
 	/* Authorize request for current user */
-	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), newRecord.Id)
+	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), newRecord.AuthorId)
 	permissions, restErr := authorizer.Authorize("create")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
@@ -64,37 +66,51 @@ func (ctr *usersHandler) Create(c *gin.Context) {
 		"permissions": permissions,
 	}
 
+	/* Generate slug for new record */
+	newRecord.Slug = ctr.dao.GenerateSlug(newRecord.Title)
+
+	/* Set authorId to current user */
+	newRecord.AuthorId = ctr.base.CurrentUser(c).Id
+
+	/* Set restaurantId to current user if current user is manager */
+	if ctr.base.CurrentUser(c).IsManager() {
+		newRecord.RestaurantId = ctr.base.CurrentUser(c).RestaurantId
+	}
+
+	/* Validate payload data */
 	if err := jsonapi.Validate.Struct(newRecord); err != nil {
 		restErr := rest_errors.NewValidationError(rest_errors.StructValidationErrors(err))
 		c.JSON(restErr.Status(), restErr)
 		return
 	}
 
-	user, getErr := ctr.dao.Create(newRecord)
+	restaurant, getErr := ctr.dao.Create(newRecord)
 	if getErr != nil {
 		c.JSON(getErr.Status(), getErr)
 		return
 	}
-	resource := user.MemberFor(AdminDetails)
+	resource := restaurant.MemberFor(AdminDetails)
 	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonPayload)
 }
 
-func (ctr *usersHandler) Get(c *gin.Context) {
-	userId, idErr := jsonapi.GetIdFromUrl(c, false)
-	if idErr != nil {
-		c.JSON(idErr.Status(), idErr)
+func (ctr *pagesHandler) Get(c *gin.Context) {
+
+	slug := jsonapi.GetIdentifierFromUrl(c, "slug", false)
+	if slug == "" {
+		slugErr := rest_errors.NewBadRequestError("slug is required")
+		c.JSON(slugErr.Status(), slugErr)
 		return
 	}
 
-	user, getErr := ctr.service.GetUser(userId)
+	restaurant, getErr := ctr.dao.Get(&slug)
 	if getErr != nil {
 		c.JSON(getErr.Status(), getErr)
 		return
 	}
 
 	/* Authorize access to resource */
-	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), user.Id)
+	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), restaurant.AuthorId)
 	permissions, restErr := authorizer.Authorize("access")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
@@ -105,61 +121,30 @@ func (ctr *usersHandler) Get(c *gin.Context) {
 		"permissions": permissions,
 	}
 
-	resource := user.MemberFor(AdminDetails)
+	resource := restaurant.MemberFor(AdminDetails)
 	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
-
 }
 
-func (ctr *usersHandler) Profile(c *gin.Context) {
-	session, ok := c.Get("currentSession")
-	if !ok {
-		restError := rest_errors.InvalidError("unauthorized")
-		c.JSON(restError.Status(), restError)
+func (ctr *pagesHandler) Update(c *gin.Context) {
+	slug := jsonapi.GetIdentifierFromUrl(c, "slug", true)
+	if slug == "" {
+		slugErr := rest_errors.NewBadRequestError("slug is required")
+		c.JSON(slugErr.Status(), slugErr)
 		return
 	}
 
-	user, getErr := ctr.service.GetUser(session.(*Session).UserId)
+	/* Check if restaurant exists with given Id */
+	record, getErr := ctr.dao.Get(&slug)
 	if getErr != nil {
 		c.JSON(getErr.Status(), getErr)
 		return
 	}
 
-	/* Authorize access to resource */
-	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), user.Id)
+	currentUser := ctr.base.CurrentUser(c)
+	/* Authorize request for current user */
+	authorizer := NewAuthorizer(currentUser, record.AuthorId)
 	permissions, restErr := authorizer.Authorize("access")
-	if restErr != nil {
-		c.JSON(restErr.Status(), restErr)
-		return
-	}
-
-	meta := map[string]interface{}{
-		"permissions":    permissions,
-		"appPermissions": user.Permissions(),
-	}
-
-	resource := user.MemberFor(OwnerDetails)
-	jsonapi := jsonapi.NewMemberSerializer[OwnerDetailItem](resource, nil, nil, meta)
-	c.JSON(http.StatusOK, jsonapi)
-}
-
-func (ctr *usersHandler) Update(c *gin.Context) {
-	userId, idErr := jsonapi.GetIdFromUrl(c, false)
-	if idErr != nil {
-		c.JSON(idErr.Status(), idErr)
-		return
-	}
-
-	/* Check if user exists with given Id */
-	user, getErr := ctr.service.GetUser(userId)
-	if getErr != nil {
-		c.JSON(getErr.Status(), getErr)
-		return
-	}
-
-	/* Authorize access to resource */
-	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), user.Id)
-	permissions, restErr := authorizer.Authorize("update")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
 		return
@@ -181,7 +166,7 @@ func (ctr *usersHandler) Update(c *gin.Context) {
 	/* Validate required params and whitelisted payload data */
 	json.Unmarshal(jsonData, &mapBody)
 	payload := ctr.base.SetData(mapBody)
-	payload.Require([]string{"id"}).Permit(user.UpdableAttributes())
+	payload.Permit(record.UpdableAttributes(currentUser.Role))
 
 	/* Skip empty data and patch with only new data if the update is partial(PATCH) */
 	isPartial := c.Request.Method == http.MethodPatch
@@ -195,18 +180,18 @@ func (ctr *usersHandler) Update(c *gin.Context) {
 		return
 	}
 
-	updatedUser, updateErr := ctr.service.UpdateUser(user, payload.Data)
+	result, updateErr := ctr.dao.Update(record, payload.Data)
 	if updateErr != nil {
 		c.JSON(updateErr.Status(), updateErr)
 		return
 	}
 
-	resource := updatedUser.MemberFor(OwnerDetails)
-	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
-	c.JSON(http.StatusOK, jsonapi)
+	resource := result.MemberFor(AdminDetails)
+	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	c.JSON(http.StatusOK, jsonPayload)
 }
 
-func (ctr *usersHandler) List(c *gin.Context) {
+func (ctr *pagesHandler) List(c *gin.Context) {
 	/* Authorize request for current user */
 	authorizer := NewAuthorizer(ctr.base.CurrentUser(c))
 	_, restErr := authorizer.Authorize("accessCollection")
@@ -215,13 +200,14 @@ func (ctr *usersHandler) List(c *gin.Context) {
 		return
 	}
 
-	params := jsonapi.WhitelistQueryParams(c, []string{"first_name", "email", "id", "last_name"})
+	params := jsonapi.WhitelistQueryParams(c, []string{"author_id", "title", "restaurant_id", "visibility"})
+
+	// Get authorized collection of restaurants
 	result, err := ctr.dao.AuthorizedCollection(params, ctr.base.CurrentUser(c))
 	if err != nil {
 		c.JSON(err.Status(), err)
 		return
 	}
-
 	meta := map[string]interface{}{
 		"total": len(result),
 	}

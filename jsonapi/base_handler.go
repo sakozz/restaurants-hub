@@ -54,6 +54,14 @@ func GetIdFromUrl(c *gin.Context, fromQuery bool) (int64, rest_errors.RestErr) {
 	return id, nil
 }
 
+func GetIdentifierFromUrl(c *gin.Context, keyName string, fromQuery bool) string {
+	identifier := c.Param(keyName)
+	if fromQuery {
+		identifier = c.Query(keyName)
+	}
+	return identifier
+}
+
 func (p *baseHandler) Require(attrs []string) *baseHandler {
 	p.Errors = []rest_errors.RestErr{}
 	for _, attr := range attrs {
