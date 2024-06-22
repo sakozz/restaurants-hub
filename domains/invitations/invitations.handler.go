@@ -72,7 +72,7 @@ func (ctr *invitationsHandler) Create(c *gin.Context) {
 		return
 	}
 	resource := restaurant.MemberFor()
-	jsonPayload := jsonapi.NewMemberSerializer[Invitation](resource, nil, nil, meta)
+	jsonPayload := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonPayload)
 }
 
@@ -101,7 +101,7 @@ func (ctr *invitationsHandler) Get(c *gin.Context) {
 	}
 
 	resource := invitation.MemberFor()
-	jsonapi := jsonapi.NewMemberSerializer[Invitation](resource, nil, nil, meta)
+	jsonapi := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 
 }
@@ -164,7 +164,7 @@ func (ctr *invitationsHandler) Update(c *gin.Context) {
 	}
 
 	resource := updatedUser.MemberFor()
-	jsonapi := jsonapi.NewMemberSerializer[Invitation](resource, nil, nil, meta)
+	jsonapi := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
 
@@ -188,6 +188,6 @@ func (ctr *invitationsHandler) List(c *gin.Context) {
 	}
 
 	collection := result.CollectionFor()
-	jsonapi := jsonapi.NewCollectionSerializer[Invitation](collection, meta)
+	jsonapi := jsonapi.NewCollectionSerializer(collection, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }

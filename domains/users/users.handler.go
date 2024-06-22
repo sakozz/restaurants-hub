@@ -76,7 +76,7 @@ func (ctr *usersHandler) Create(c *gin.Context) {
 		return
 	}
 	resource := user.MemberFor(AdminDetails)
-	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	jsonPayload := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonPayload)
 }
 
@@ -106,7 +106,7 @@ func (ctr *usersHandler) Get(c *gin.Context) {
 	}
 
 	resource := user.MemberFor(AdminDetails)
-	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	jsonapi := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 
 }
@@ -139,7 +139,7 @@ func (ctr *usersHandler) Profile(c *gin.Context) {
 	}
 
 	resource := user.MemberFor(OwnerDetails)
-	jsonapi := jsonapi.NewMemberSerializer[OwnerDetailItem](resource, nil, nil, meta)
+	jsonapi := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
 
@@ -202,7 +202,7 @@ func (ctr *usersHandler) Update(c *gin.Context) {
 	}
 
 	resource := updatedUser.MemberFor(OwnerDetails)
-	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	jsonapi := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
 
@@ -227,6 +227,6 @@ func (ctr *usersHandler) List(c *gin.Context) {
 	}
 
 	collection := result.CollectionFor(AdminList)
-	jsonapi := jsonapi.NewCollectionSerializer[AdminListItem](collection, meta)
+	jsonapi := jsonapi.NewCollectionSerializer(collection, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }

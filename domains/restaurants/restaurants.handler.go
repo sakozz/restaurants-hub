@@ -93,7 +93,7 @@ func (ctr *restaurantsHandler) Create(c *gin.Context) {
 	}
 
 	resource := restaurant.MemberFor(AdminDetails)
-	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	jsonPayload := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonPayload)
 }
 
@@ -124,7 +124,7 @@ func (ctr *restaurantsHandler) Get(c *gin.Context) {
 	}
 
 	resource := restaurant.MemberFor(AdminDetails)
-	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	jsonapi := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
 
@@ -149,7 +149,7 @@ func (ctr *restaurantsHandler) MyRestaurant(c *gin.Context) {
 	}
 
 	resource := restaurant.MemberFor(OwnerDetails)
-	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	jsonapi := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
 
@@ -212,7 +212,7 @@ func (ctr *restaurantsHandler) Update(c *gin.Context) {
 	}
 
 	resource := result.MemberFor(AdminDetails)
-	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	jsonPayload := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonPayload)
 }
 
@@ -238,6 +238,6 @@ func (ctr *restaurantsHandler) List(c *gin.Context) {
 	}
 
 	collection := result.CollectionFor(AdminList)
-	jsonapi := jsonapi.NewCollectionSerializer[AdminListItem](collection, meta)
+	jsonapi := jsonapi.NewCollectionSerializer(collection, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }

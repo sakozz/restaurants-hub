@@ -49,13 +49,14 @@ func (ctr *pagesHandler) Create(c *gin.Context) {
 	newRecord := &CreatePagePayload{}
 	mapstructure.Decode(payload.Data, &newRecord)
 
+	currentUser := ctr.base.CurrentUser(c)
 	/* if currentUser is not admin, set managerId to current user */
-	if !ctr.base.CurrentUser(c).IsAdmin() {
-		newRecord.AuthorId = ctr.base.CurrentUser(c).Id
+	if !currentUser.IsAdmin() {
+		newRecord.AuthorId = currentUser.Id
 	}
 
 	/* Authorize request for current user */
-	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), newRecord.AuthorId)
+	authorizer := NewAuthorizer(currentUser, newRecord.AuthorId)
 	permissions, restErr := authorizer.Authorize("create")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
@@ -70,11 +71,11 @@ func (ctr *pagesHandler) Create(c *gin.Context) {
 	newRecord.Slug = ctr.dao.GenerateSlug(newRecord.Title)
 
 	/* Set authorId to current user */
-	newRecord.AuthorId = ctr.base.CurrentUser(c).Id
+	newRecord.AuthorId = currentUser.Id
 
 	/* Set restaurantId to current user if current user is manager */
-	if ctr.base.CurrentUser(c).IsManager() {
-		newRecord.RestaurantId = ctr.base.CurrentUser(c).RestaurantId
+	if currentUser.IsManager() {
+		newRecord.RestaurantId = currentUser.RestaurantId
 	}
 
 	/* Validate payload data */
@@ -89,8 +90,8 @@ func (ctr *pagesHandler) Create(c *gin.Context) {
 		c.JSON(getErr.Status(), getErr)
 		return
 	}
-	resource := restaurant.MemberFor(AdminDetails)
-	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	resource := restaurant.MemberFor(currentUser.Role)
+	jsonPayload := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonPayload)
 }
 
@@ -110,7 +111,8 @@ func (ctr *pagesHandler) Get(c *gin.Context) {
 	}
 
 	/* Authorize access to resource */
-	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), restaurant.AuthorId)
+	currentUser := ctr.base.CurrentUser(c)
+	authorizer := NewAuthorizer(currentUser, restaurant.AuthorId)
 	permissions, restErr := authorizer.Authorize("access")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
@@ -121,8 +123,8 @@ func (ctr *pagesHandler) Get(c *gin.Context) {
 		"permissions": permissions,
 	}
 
-	resource := restaurant.MemberFor(AdminDetails)
-	jsonapi := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	resource := restaurant.MemberFor(currentUser.Role)
+	jsonapi := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
 
@@ -186,14 +188,15 @@ func (ctr *pagesHandler) Update(c *gin.Context) {
 		return
 	}
 
-	resource := result.MemberFor(AdminDetails)
-	jsonPayload := jsonapi.NewMemberSerializer[AdminDetailItem](resource, nil, nil, meta)
+	resource := result.MemberFor(currentUser.Role)
+	jsonPayload := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonPayload)
 }
 
 func (ctr *pagesHandler) List(c *gin.Context) {
+	currentUser := ctr.base.CurrentUser(c)
 	/* Authorize request for current user */
-	authorizer := NewAuthorizer(ctr.base.CurrentUser(c))
+	authorizer := NewAuthorizer(currentUser)
 	_, restErr := authorizer.Authorize("accessCollection")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
@@ -212,7 +215,7 @@ func (ctr *pagesHandler) List(c *gin.Context) {
 		"total": len(result),
 	}
 
-	collection := result.CollectionFor(AdminList)
-	jsonapi := jsonapi.NewCollectionSerializer[AdminListItem](collection, meta)
+	collection := result.CollectionFor(currentUser.Role)
+	jsonapi := jsonapi.NewCollectionSerializer(collection, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }

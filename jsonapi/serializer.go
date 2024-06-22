@@ -1,17 +1,15 @@
 package jsonapi
 
-type MemberSerializer interface{}
-
 // Schema for jsonapi member response
-type memberSerializer[T any] struct {
+type MemberSerializer struct {
 	Data          interface{}   `json:"data"`
 	Included      []interface{} `json:"included"`
 	Relationships []interface{} `json:"relationships"`
 	Meta          interface{}   `json:"meta"`
 }
 
-func NewMemberSerializer[T any](resource interface{}, included []interface{}, relationships []interface{}, meta interface{}) MemberSerializer {
-	return &memberSerializer[T]{
+func NewMemberSerializer(resource interface{}, included []interface{}, relationships []interface{}, meta interface{}) *MemberSerializer {
+	return &MemberSerializer{
 		Data:          resource,
 		Included:      included,
 		Relationships: relationships,
@@ -19,17 +17,14 @@ func NewMemberSerializer[T any](resource interface{}, included []interface{}, re
 	}
 }
 
-// Collection serializer
-type CollectionSerializer[T any] interface{}
-
 // Schema for jsonapi collection response
-type collectionSerializer[T any] struct {
+type CollectionSerializer struct {
 	Data []interface{}          `json:"data"`
 	Meta map[string]interface{} `json:"meta"`
 }
 
-func NewCollectionSerializer[T any](collection []interface{}, meta map[string]interface{}) CollectionSerializer[T] {
-	return &collectionSerializer[T]{
+func NewCollectionSerializer(collection []interface{}, meta map[string]interface{}) *CollectionSerializer {
+	return &CollectionSerializer{
 		Data: collection,
 		Meta: meta,
 	}

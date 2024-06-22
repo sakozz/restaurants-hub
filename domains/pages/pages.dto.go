@@ -37,10 +37,13 @@ type CreatePagePayload struct {
 	DeletedAt    sql.NullTime  `json:"deletedAt" db:"deleted_at" goqu:"skipupdate,omitempty"`
 }
 
+type PublicItem struct {
+	Title   string `json:"title" db:"title"`
+	Slug    string `json:"slug" db:"slug"`
+	Excerpt string `json:"excerpt" db:"excerpt"`
+}
 type OwnerListItem struct {
-	Title        string        `json:"title" db:"title"`
-	Slug         string        `json:"slug" db:"slug"`
-	Excerpt      string        `json:"excerpt" db:"excerpt"`
+	PublicItem
 	Visibility   string        `json:"visibility" db:"visibility"`
 	AuthorId     int64         `json:"authorId" db:"author_id"`
 	ParentPageId types.NullInt `json:"parentPageId" db:"parent_page_id"`
@@ -76,12 +79,4 @@ func (page *Page) UpdableAttributes(role consts.Role) []string {
 	}
 }
 
-const (
-	AdminList    ViewTypes = 0
-	OwnerList              = 1
-	AdminDetails           = 2
-	OwnerDetails           = 3
-)
-
 type Pages []Page
-type ViewTypes int64
