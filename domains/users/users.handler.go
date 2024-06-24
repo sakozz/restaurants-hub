@@ -53,7 +53,8 @@ func (ctr *usersHandler) Create(c *gin.Context) {
 	mapstructure.Decode(payload.Data, &newRecord)
 
 	/* Authorize request for current user */
-	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), newRecord.Id)
+	currentUser := ctr.base.CurrentUser(c)
+	authorizer := NewAuthorizer(currentUser, newRecord.Id)
 	permissions, restErr := authorizer.Authorize("create")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
@@ -75,7 +76,7 @@ func (ctr *usersHandler) Create(c *gin.Context) {
 		c.JSON(getErr.Status(), getErr)
 		return
 	}
-	resource := user.MemberFor(AdminDetails)
+	resource := user.MemberFor(currentUser.Role)
 	jsonPayload := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonPayload)
 }
@@ -94,7 +95,8 @@ func (ctr *usersHandler) Get(c *gin.Context) {
 	}
 
 	/* Authorize access to resource */
-	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), user.Id)
+	currentUser := ctr.base.CurrentUser(c)
+	authorizer := NewAuthorizer(currentUser, user.Id)
 	permissions, restErr := authorizer.Authorize("access")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
@@ -105,7 +107,7 @@ func (ctr *usersHandler) Get(c *gin.Context) {
 		"permissions": permissions,
 	}
 
-	resource := user.MemberFor(AdminDetails)
+	resource := user.MemberFor(currentUser.Role)
 	jsonapi := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 
@@ -126,7 +128,8 @@ func (ctr *usersHandler) Profile(c *gin.Context) {
 	}
 
 	/* Authorize access to resource */
-	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), user.Id)
+	currentUser := ctr.base.CurrentUser(c)
+	authorizer := NewAuthorizer(currentUser, user.Id)
 	permissions, restErr := authorizer.Authorize("access")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
@@ -138,7 +141,7 @@ func (ctr *usersHandler) Profile(c *gin.Context) {
 		"appPermissions": user.Permissions(),
 	}
 
-	resource := user.MemberFor(OwnerDetails)
+	resource := user.MemberFor(currentUser.Role)
 	jsonapi := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
@@ -158,7 +161,8 @@ func (ctr *usersHandler) Update(c *gin.Context) {
 	}
 
 	/* Authorize access to resource */
-	authorizer := NewAuthorizer(ctr.base.CurrentUser(c), user.Id)
+	currentUser := ctr.base.CurrentUser(c)
+	authorizer := NewAuthorizer(currentUser, user.Id)
 	permissions, restErr := authorizer.Authorize("update")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
@@ -201,14 +205,15 @@ func (ctr *usersHandler) Update(c *gin.Context) {
 		return
 	}
 
-	resource := updatedUser.MemberFor(OwnerDetails)
+	resource := updatedUser.MemberFor(currentUser.Role)
 	jsonapi := jsonapi.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
 
 func (ctr *usersHandler) List(c *gin.Context) {
 	/* Authorize request for current user */
-	authorizer := NewAuthorizer(ctr.base.CurrentUser(c))
+	currentUser := ctr.base.CurrentUser(c)
+	authorizer := NewAuthorizer(currentUser)
 	_, restErr := authorizer.Authorize("accessCollection")
 	if restErr != nil {
 		c.JSON(restErr.Status(), restErr)
@@ -216,7 +221,7 @@ func (ctr *usersHandler) List(c *gin.Context) {
 	}
 
 	params := jsonapi.WhitelistQueryParams(c, []string{"first_name", "email", "id", "last_name"})
-	result, err := ctr.dao.AuthorizedCollection(params, ctr.base.CurrentUser(c))
+	result, err := ctr.dao.AuthorizedCollection(params, currentUser)
 	if err != nil {
 		c.JSON(err.Status(), err)
 		return
@@ -226,7 +231,7 @@ func (ctr *usersHandler) List(c *gin.Context) {
 		"total": len(result),
 	}
 
-	collection := result.CollectionFor(AdminList)
+	collection := result.CollectionFor(currentUser.Role)
 	jsonapi := jsonapi.NewCollectionSerializer(collection, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
