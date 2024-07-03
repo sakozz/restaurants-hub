@@ -1,4 +1,4 @@
-package sso
+package configs
 
 import (
 	"os"

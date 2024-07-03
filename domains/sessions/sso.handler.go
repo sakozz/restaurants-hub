@@ -10,8 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
+	"resturants-hub.com/m/v2/configs"
 	"resturants-hub.com/m/v2/domains/invitations"
-	"resturants-hub.com/m/v2/domains/sso"
 	"resturants-hub.com/m/v2/domains/users"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
@@ -43,11 +43,11 @@ func (handler *ssoHandler) SsoLogin(c *gin.Context) {
 	verifier := oauth2.GenerateVerifier()
 	state := "state"
 
-	sso.MemoryCache.Set(state, verifier)
+	configs.MemoryCache.Set(state, verifier)
 
 	// Redirect user to consent page to ask for permission
 	// for the scopes specified above.
-	url := sso.GoogleSsoConfig.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
+	url := configs.GoogleSsoConfig.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
 	c.Redirect(http.StatusFound, url)
 }
 
@@ -58,12 +58,12 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 	code := queryParams.Get("code")
 	state := queryParams.Get("state")
 
-	verifier, err := sso.MemoryCache.Get(state)
+	verifier, err := configs.MemoryCache.Get(state)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	token, err := sso.GoogleSsoConfig.Exchange(ctx, code, oauth2.VerifierOption(verifier))
+	token, err := configs.GoogleSsoConfig.Exchange(ctx, code, oauth2.VerifierOption(verifier))
 	if err != nil {
 		fmt.Println("Error on SSO token exchange:", err)
 		restErr := rest_errors.NewInternalServerError(err)
@@ -72,7 +72,7 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 	}
 
 	// Retrieve user data by token
-	client := sso.GoogleSsoConfig.Client(c, token)
+	client := configs.GoogleSsoConfig.Client(c, token)
 	userData, err := handler.RetrieveUserInfo(client, token.AccessToken)
 	if err != nil {
 		fmt.Println("Retrieve user error:", err)
@@ -136,7 +136,7 @@ func (handler *ssoHandler) RenewSession(c *gin.Context) {
 	}
 	session := currentSession.(*users.Session)
 
-	tokenSource := sso.GoogleSsoConfig.TokenSource(context.Background(), &oauth2.Token{
+	tokenSource := configs.GoogleSsoConfig.TokenSource(context.Background(), &oauth2.Token{
 		RefreshToken: session.RefreshToken,
 	})
 
