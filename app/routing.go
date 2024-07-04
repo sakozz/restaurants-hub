@@ -5,20 +5,16 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"resturants-hub.com/m/v2/domains/invitations"
-	"resturants-hub.com/m/v2/domains/pages"
-	"resturants-hub.com/m/v2/domains/restaurants"
-	"resturants-hub.com/m/v2/domains/sessions"
-	"resturants-hub.com/m/v2/domains/users"
+	"resturants-hub.com/m/v2/handlers"
 	"resturants-hub.com/m/v2/middleware"
 )
 
 var (
-	ssoHandler         sessions.SsoHandler            = sessions.NewSsoHandler()
-	usersHandler       users.UsersHandler             = users.NewUsersHandler()
-	invitationsHandler invitations.InvitationsHandler = invitations.NewInvitationsHandler()
-	restaurantsHandler restaurants.RestaurantsHandler = restaurants.NewAdminRestaurantsHandler()
-	pagesHandler       pages.PagesHandler       = pages.NewPagesHandler()
+	ssoHandler         handlers.SsoHandler         = handlers.NewSsoHandler()
+	usersHandler       handlers.UsersHandler       = handlers.NewUsersHandler()
+	invitationsHandler handlers.InvitationsHandler = handlers.NewInvitationsHandler()
+	restaurantsHandler handlers.RestaurantsHandler = handlers.NewAdminRestaurantsHandler()
+	pagesHandler       handlers.PagesHandler       = handlers.NewPagesHandler()
 )
 
 func mapRoutes() {
@@ -67,14 +63,13 @@ func mapRoutes() {
 		restaurantsRoutes.GET("/", restaurantsHandler.MyRestaurant)
 	}
 
-
-		/* Pages routes */
-		pagesRoutes := router.Group("/api/pages", middleware.RequireAuth)
-		{
-			pagesRoutes.GET("/", pagesHandler.List)
-			pagesRoutes.POST("/", pagesHandler.Create)
-			pagesRoutes.GET("/:slug", pagesHandler.Get)
-		}
+	/* Pages routes */
+	pagesRoutes := router.Group("/api/pages", middleware.RequireAuth)
+	{
+		pagesRoutes.GET("/", pagesHandler.ListPages)
+		pagesRoutes.POST("/", pagesHandler.CreatePage)
+		pagesRoutes.GET("/:slug", pagesHandler.GetPage)
+	}
 
 	/* Auth routes */
 	authRoutes := router.Group("/api/auth")

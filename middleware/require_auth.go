@@ -4,9 +4,9 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"resturants-hub.com/m/v2/domains/sessions"
-	"resturants-hub.com/m/v2/domains/users"
+	"resturants-hub.com/m/v2/dao"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
+	"resturants-hub.com/m/v2/services"
 )
 
 // MARK: RequireAuth
@@ -19,7 +19,7 @@ func RequireAuth(c *gin.Context) {
 	}
 
 	/* Validate  */
-	sessionService := sessions.NewSessionService()
+	sessionService := services.NewSessionService()
 	session, restErr := sessionService.ValidateSessionToken(tokenString)
 	if restErr != nil {
 		c.AbortWithStatusJSON(restErr.Status(), restErr)
@@ -27,7 +27,7 @@ func RequireAuth(c *gin.Context) {
 	}
 
 	// Get user by id
-	usersDao := users.NewUsersDao()
+	usersDao := dao.NewUsersDao()
 	user, err := usersDao.GetSessionUser(&session.UserId)
 	if err != nil {
 		unauthorisedError(c)
