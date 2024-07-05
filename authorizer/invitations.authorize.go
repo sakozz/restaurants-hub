@@ -1,8 +1,8 @@
 package authorizer
 
 import (
+	"resturants-hub.com/m/v2/dto"
 	consts "resturants-hub.com/m/v2/packages/const"
-	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
@@ -15,11 +15,11 @@ type InvitationAuthorizor interface {
 }
 
 type invitationsAuthUser struct {
-	*structs.BaseUser
+	*dto.BaseUser
 	InvitedEmail string
 }
 
-func NewInvitationAuthorizer(currentUser *structs.BaseUser, email ...string) InvitationAuthorizor {
+func NewInvitationAuthorizer(currentUser *dto.BaseUser, email ...string) InvitationAuthorizor {
 	if len(email) == 0 {
 		email = append(email, "")
 	}

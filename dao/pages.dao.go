@@ -9,14 +9,13 @@ import (
 	"resturants-hub.com/m/v2/database"
 	"resturants-hub.com/m/v2/dto"
 	consts "resturants-hub.com/m/v2/packages/const"
-	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
 type PagesDao interface {
 	Create(*dto.CreatePagePayload) (*dto.Page, rest_errors.RestErr)
 	Search(url.Values) (dto.Pages, rest_errors.RestErr)
-	AuthorizedCollection(url.Values, *structs.BaseUser) (dto.Pages, rest_errors.RestErr)
+	AuthorizedCollection(url.Values, *dto.BaseUser) (dto.Pages, rest_errors.RestErr)
 	Get(slug *string) (*dto.Page, rest_errors.RestErr)
 	Update(*dto.Page, interface{}) (*dto.Page, rest_errors.RestErr)
 	GenerateSlug(string) string
@@ -83,7 +82,7 @@ func (connection *connection) GenerateSlug(title string) string {
 	return slug
 }
 
-func (connection *connection) AuthorizedCollection(params url.Values, user *structs.BaseUser) (dto.Pages, rest_errors.RestErr) {
+func (connection *connection) AuthorizedCollection(params url.Values, user *dto.BaseUser) (dto.Pages, rest_errors.RestErr) {
 	switch user.Role {
 	case consts.Admin:
 		return connection.Search(params)

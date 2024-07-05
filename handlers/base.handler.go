@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"golang.org/x/exp/slices"
-	"resturants-hub.com/m/v2/packages/structs"
+	"resturants-hub.com/m/v2/dto"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
@@ -17,7 +17,7 @@ type BaseHandler interface {
 	Require([]string) *baseHandler
 	Permit([]string) *baseHandler
 	SetData(map[string]interface{}) *baseHandler
-	CurrentUser(*gin.Context) *structs.BaseUser
+	CurrentUser(*gin.Context) *dto.BaseUser
 }
 
 type baseHandler struct {
@@ -102,13 +102,13 @@ func (p *baseHandler) SetData(payload map[string]interface{}) *baseHandler {
 	return p
 }
 
-func (p *baseHandler) CurrentUser(c *gin.Context) *structs.BaseUser {
+func (p *baseHandler) CurrentUser(c *gin.Context) *dto.BaseUser {
 	// Get current user from context
 	userData, ok := c.Get("currentUser")
 	if !ok {
 		return nil
 	}
-	return userData.(*structs.BaseUser)
+	return userData.(*dto.BaseUser)
 }
 
 var (

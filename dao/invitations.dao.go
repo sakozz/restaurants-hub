@@ -7,7 +7,6 @@ import (
 	"resturants-hub.com/m/v2/database"
 	"resturants-hub.com/m/v2/dto"
 	consts "resturants-hub.com/m/v2/packages/const"
-	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
@@ -17,7 +16,7 @@ type InvitationsDao interface {
 	UpdateInvitation(*dto.Invitation, interface{}) (*dto.Invitation, rest_errors.RestErr)
 	GetInvitation(id *int64) (*dto.Invitation, rest_errors.RestErr)
 	SearchInvitations(params map[string]interface{}) *dto.Invitation
-	AuthorizedInvitationsCollection(url.Values, *structs.BaseUser) (dto.Invitations, rest_errors.RestErr)
+	AuthorizedInvitationsCollection(url.Values, *dto.BaseUser) (dto.Invitations, rest_errors.RestErr)
 }
 
 func NewInvitationDao() InvitationsDao {
@@ -81,7 +80,7 @@ func (connection *connection) SearchInvitations(params map[string]interface{}) *
 	return invitation
 }
 
-func (connection *connection) AuthorizedInvitationsCollection(params url.Values, user *structs.BaseUser) (dto.Invitations, rest_errors.RestErr) {
+func (connection *connection) AuthorizedInvitationsCollection(params url.Values, user *dto.BaseUser) (dto.Invitations, rest_errors.RestErr) {
 	switch user.Role {
 	case consts.Admin:
 		return connection.search(params)

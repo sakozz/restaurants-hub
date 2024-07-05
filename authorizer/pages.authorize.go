@@ -1,8 +1,8 @@
 package authorizer
 
 import (
+	"resturants-hub.com/m/v2/dto"
 	consts "resturants-hub.com/m/v2/packages/const"
-	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
@@ -15,11 +15,11 @@ type PageAuthorizor interface {
 }
 
 type pagesAuthUser struct {
-	*structs.BaseUser
+	*dto.BaseUser
 	AuthorId int64
 }
 
-func NewPageAuthorizer(currentUser *structs.BaseUser, authorId ...int64) PageAuthorizor {
+func NewPageAuthorizer(currentUser *dto.BaseUser, authorId ...int64) PageAuthorizor {
 	if authorId == nil {
 		authorId = []int64{0}
 	}

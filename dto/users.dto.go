@@ -6,20 +6,19 @@ import (
 	"time"
 
 	consts "resturants-hub.com/m/v2/packages/const"
-	"resturants-hub.com/m/v2/packages/structs"
 	"resturants-hub.com/m/v2/packages/types"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 	"resturants-hub.com/m/v2/serializers"
 )
 
 type User struct {
-	structs.BaseUser
+	BaseUser
 	CreatedAt time.Time      `json:"createdAt" db:"created_at" goqu:"skipinsert"`
 	UpdatedAt time.Time      `json:"updatedAt" db:"updated_at" goqu:"skipinsert"`
 	DeletedAt types.NullTime `json:"deletedAt" db:"deleted_at" goqu:"skipinsert"`
 }
 
-type CreateUserPayload structs.BaseUser
+type CreateUserPayload BaseUser
 
 type LoginPayload struct {
 	Email    string `json:"email"`

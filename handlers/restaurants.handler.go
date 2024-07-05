@@ -94,7 +94,7 @@ func (ctr *restaurantsHandler) Create(c *gin.Context) {
 		}
 	}
 
-	resource := restaurant.MemberFor(dto.AdminDetails)
+	resource := restaurant.MemberFor(currentUser.Role)
 	jsonPayload := serializers.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonPayload)
 }
@@ -126,7 +126,7 @@ func (ctr *restaurantsHandler) Get(c *gin.Context) {
 		"permissions": permissions,
 	}
 
-	resource := restaurant.MemberFor(dto.AdminDetails)
+	resource := restaurant.MemberFor(currentUser.Role)
 	jsonapi := serializers.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
@@ -152,7 +152,7 @@ func (ctr *restaurantsHandler) MyRestaurant(c *gin.Context) {
 		"permissions": permissions,
 	}
 
-	resource := restaurant.MemberFor(dto.OwnerDetails)
+	resource := restaurant.MemberFor(currentUser.Role)
 	jsonapi := serializers.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }
@@ -216,7 +216,7 @@ func (ctr *restaurantsHandler) Update(c *gin.Context) {
 		return
 	}
 
-	resource := result.MemberFor(dto.AdminDetails)
+	resource := result.MemberFor(currentUser.Role)
 	jsonPayload := serializers.NewMemberSerializer(resource, nil, nil, meta)
 	c.JSON(http.StatusOK, jsonPayload)
 }
@@ -243,7 +243,7 @@ func (ctr *restaurantsHandler) List(c *gin.Context) {
 		"total": len(result),
 	}
 
-	collection := result.CollectionFor(dto.AdminList)
+	collection := result.CollectionFor(currentUser.Role)
 	jsonapi := serializers.NewCollectionSerializer(collection, meta)
 	c.JSON(http.StatusOK, jsonapi)
 }

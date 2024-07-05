@@ -7,7 +7,6 @@ import (
 	"resturants-hub.com/m/v2/database"
 	"resturants-hub.com/m/v2/dto"
 	consts "resturants-hub.com/m/v2/packages/const"
-	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
@@ -16,8 +15,8 @@ type UsersDao interface {
 	FindOrCreateUser(*dto.CreateUserPayload) (*dto.User, rest_errors.RestErr)
 	UpdateUser(id *int64, payload interface{}) (*dto.User, rest_errors.RestErr)
 	GetUser(id *int64) (*dto.User, rest_errors.RestErr)
-	GetSessionUser(id *int64) (*structs.BaseUser, rest_errors.RestErr)
-	AuthorizedUsersCollection(url.Values, *structs.BaseUser) (dto.Users, rest_errors.RestErr)
+	GetSessionUser(id *int64) (*dto.BaseUser, rest_errors.RestErr)
+	AuthorizedUsersCollection(url.Values, *dto.BaseUser) (dto.Users, rest_errors.RestErr)
 	Where(params map[string]interface{}) *dto.User
 }
 
@@ -97,7 +96,7 @@ func (connection *connection) GetUser(id *int64) (*dto.User, rest_errors.RestErr
 	return user, nil
 }
 
-func (connection *connection) GetSessionUser(id *int64) (*structs.BaseUser, rest_errors.RestErr) {
+func (connection *connection) GetSessionUser(id *int64) (*dto.BaseUser, rest_errors.RestErr) {
 	user := &dto.User{}
 	query := connection.sqlBuilder.Find("users", map[string]interface{}{"id": id})
 	err := connection.db.Get(user, query)
@@ -123,7 +122,7 @@ func (connection *connection) Where(params map[string]interface{}) *dto.User {
 	return user
 }
 
-func (connection *connection) AuthorizedUsersCollection(params url.Values, user *structs.BaseUser) (dto.Users, rest_errors.RestErr) {
+func (connection *connection) AuthorizedUsersCollection(params url.Values, user *dto.BaseUser) (dto.Users, rest_errors.RestErr) {
 	switch user.Role {
 	case consts.Admin:
 		return connection.searchUsers(params)

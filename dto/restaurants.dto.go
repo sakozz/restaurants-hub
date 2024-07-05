@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
+	consts "resturants-hub.com/m/v2/packages/const"
 	"resturants-hub.com/m/v2/packages/types"
 	"resturants-hub.com/m/v2/serializers"
 )
@@ -119,41 +120,37 @@ const (
 type Restaurants []Restaurant
 type ViewTypes int64
 
-func (record *Restaurant) MemberFor(view ViewTypes) interface{} {
+func (record *Restaurant) MemberFor(role consts.Role) interface{} {
 	payload, _ := json.Marshal(record)
-	switch view {
-	case AdminList:
-		var adminListItem AdminRestaurantListItem
-		json.Unmarshal(payload, &adminListItem)
-		return serializers.MemberPayload[AdminRestaurantListItem]{Id: record.Id, Type: "restaurants", Attributes: adminListItem}
-	case AdminDetails:
+	switch role {
+	case consts.Admin:
 		var details AdminRestaurantDetailItem
 		json.Unmarshal(payload, &details)
 		return serializers.MemberPayload[AdminRestaurantDetailItem]{Id: record.Id, Type: "restaurants", Attributes: details}
+	case consts.Manager:
+		var details OwnerRestaurantDetailItem
+		json.Unmarshal(payload, &details)
+		return serializers.MemberPayload[OwnerRestaurantDetailItem]{Id: record.Id, Type: "restaurants", Attributes: details}
 	default:
-		var adminListItem AdminRestaurantListItem
-		json.Unmarshal(payload, &adminListItem)
-		return serializers.MemberPayload[AdminRestaurantListItem]{Id: record.Id, Type: "restaurants", Attributes: adminListItem}
+		var listItem OwnerRestaurantListItem
+		json.Unmarshal(payload, &listItem)
+		return serializers.MemberPayload[OwnerRestaurantListItem]{Id: record.Id, Type: "restaurants", Attributes: listItem}
 	}
 }
 
-func (restaurants Restaurants) CollectionFor(view ViewTypes) []interface{} {
+func (restaurants Restaurants) CollectionFor(role consts.Role) []interface{} {
 	result := make([]interface{}, len(restaurants))
 	for index, record := range restaurants {
 		payload, _ := json.Marshal(record)
-		switch view {
-		case AdminList:
+		switch role {
+		case consts.Admin:
 			var adminListItem AdminRestaurantListItem
 			json.Unmarshal(payload, &adminListItem)
 			result[index] = serializers.MemberPayload[AdminRestaurantListItem]{Id: record.Id, Type: "restaurants", Attributes: adminListItem}
-		case AdminDetails:
-			var details AdminRestaurantDetailItem
+		case consts.Manager:
+			var details OwnerRestaurantDetailItem
 			json.Unmarshal(payload, &details)
-			result[index] = serializers.MemberPayload[AdminRestaurantDetailItem]{Id: record.Id, Type: "restaurants", Attributes: details}
-		default:
-			var adminListItem AdminRestaurantListItem
-			json.Unmarshal(payload, &adminListItem)
-			result[index] = serializers.MemberPayload[AdminRestaurantListItem]{Id: record.Id, Type: "restaurants", Attributes: adminListItem}
+			result[index] = serializers.MemberPayload[OwnerRestaurantDetailItem]{Id: record.Id, Type: "restaurants", Attributes: details}
 		}
 	}
 	return result

@@ -8,14 +8,13 @@ import (
 	"resturants-hub.com/m/v2/database"
 	"resturants-hub.com/m/v2/dto"
 	consts "resturants-hub.com/m/v2/packages/const"
-	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
 type RestaurantDao interface {
 	CreateRestaurant(*dto.CreateRestaurantPayload) (*dto.Restaurant, rest_errors.RestErr)
 	SearchRestaurants(url.Values) (dto.Restaurants, rest_errors.RestErr)
-	AuthorizedRestaurantCollection(url.Values, *structs.BaseUser) (dto.Restaurants, rest_errors.RestErr)
+	AuthorizedRestaurantCollection(url.Values, *dto.BaseUser) (dto.Restaurants, rest_errors.RestErr)
 	GetRestaurant(id *int64) (*dto.Restaurant, rest_errors.RestErr)
 	RestaurantByOwnerId(*int64) (*dto.Restaurant, rest_errors.RestErr)
 	UpdateRestaurant(*dto.Restaurant, interface{}) (*dto.Restaurant, rest_errors.RestErr)
@@ -82,7 +81,7 @@ func (connection *connection) SearchRestaurants(params url.Values) (dto.Restaura
 	return restaurants, nil
 }
 
-func (connection *connection) AuthorizedRestaurantCollection(params url.Values, user *structs.BaseUser) (dto.Restaurants, rest_errors.RestErr) {
+func (connection *connection) AuthorizedRestaurantCollection(params url.Values, user *dto.BaseUser) (dto.Restaurants, rest_errors.RestErr) {
 	switch user.Role {
 	case consts.Admin:
 		return connection.SearchRestaurants(params)

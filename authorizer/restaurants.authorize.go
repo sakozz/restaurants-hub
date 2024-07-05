@@ -1,8 +1,8 @@
 package authorizer
 
 import (
+	"resturants-hub.com/m/v2/dto"
 	consts "resturants-hub.com/m/v2/packages/const"
-	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
@@ -14,11 +14,11 @@ type RestaurantAuthorizor interface {
 	UserOwnsResource() bool
 }
 type restaurantAuthUser struct {
-	*structs.BaseUser
+	*dto.BaseUser
 	ManagerId int64
 }
 
-func NewRestaurantsAuthorizer(currentUser *structs.BaseUser, managerId ...int64) RestaurantAuthorizor {
+func NewRestaurantsAuthorizer(currentUser *dto.BaseUser, managerId ...int64) RestaurantAuthorizor {
 	if managerId == nil {
 		managerId = []int64{0}
 	}

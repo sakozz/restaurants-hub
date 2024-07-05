@@ -1,8 +1,8 @@
 package authorizer
 
 import (
+	"resturants-hub.com/m/v2/dto"
 	consts "resturants-hub.com/m/v2/packages/const"
-	"resturants-hub.com/m/v2/packages/structs"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 )
 
@@ -14,7 +14,7 @@ type UsersAuthorizor interface {
 	userIsSelf() bool
 }
 type UsersAuthorizoruthUser struct {
-	*structs.BaseUser
+	*dto.BaseUser
 	UserId int64
 }
 
@@ -24,7 +24,7 @@ type permissions struct {
 	CanDelete bool `json:"canDelete"`
 }
 
-func NewUsersAuthorizer(currentUser *structs.BaseUser, userId ...int64) UsersAuthorizor {
+func NewUsersAuthorizer(currentUser *dto.BaseUser, userId ...int64) UsersAuthorizor {
 	if userId == nil {
 		userId = append(userId, -1)
 	}
