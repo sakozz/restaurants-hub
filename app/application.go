@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"resturants-hub.com/m/v2/configs"
 	"resturants-hub.com/m/v2/database"
 )
 
@@ -14,7 +13,6 @@ var (
 
 func StartApplication() {
 	database.RunMigrations()
-	configs.Setup()
 	mapRoutes()
 
 	// Use env variable for port configuration if available, default to 3000 otherwise

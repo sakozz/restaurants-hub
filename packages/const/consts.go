@@ -16,3 +16,10 @@ const (
 	Invitations              = "invitations"
 	Pages                    = "pages"
 )
+
+type SsoProvider string
+
+const (
+	Google    SsoProvider = "google"
+	Authentik             = "authentik"
+)

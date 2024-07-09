@@ -13,6 +13,7 @@ import (
 	"resturants-hub.com/m/v2/configs"
 	"resturants-hub.com/m/v2/dao"
 	"resturants-hub.com/m/v2/dto"
+	consts "resturants-hub.com/m/v2/packages/const"
 	rest_errors "resturants-hub.com/m/v2/packages/utils"
 	"resturants-hub.com/m/v2/services"
 )
@@ -28,6 +29,7 @@ type ssoHandler struct {
 	service        services.SessionService
 	usersDao       dao.UsersDao
 	invitationsDao dao.InvitationsDao
+	ssoConfig      configs.SsoConfig
 }
 
 func NewSsoHandler() SsoHandler {
@@ -35,6 +37,7 @@ func NewSsoHandler() SsoHandler {
 		service:        services.NewSessionService(),
 		usersDao:       dao.NewUsersDao(),
 		invitationsDao: dao.NewInvitationDao(),
+		ssoConfig:      *configs.NewSsoConfig(consts.Authentik),
 	}
 }
 
@@ -48,7 +51,7 @@ func (handler *ssoHandler) SsoLogin(c *gin.Context) {
 
 	// Redirect user to consent page to ask for permission
 	// for the scopes specified above.
-	url := configs.GoogleSsoConfig.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
+	url := handler.ssoConfig.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
 	c.Redirect(http.StatusFound, url)
 }
 
@@ -64,7 +67,7 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 		fmt.Println(err)
 	}
 
-	token, err := configs.GoogleSsoConfig.Exchange(ctx, code, oauth2.VerifierOption(verifier))
+	token, err := handler.ssoConfig.Exchange(ctx, code, oauth2.VerifierOption(verifier))
 	if err != nil {
 		fmt.Println("Error on SSO token exchange:", err)
 		restErr := rest_errors.NewInternalServerError(err)
@@ -73,7 +76,7 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 	}
 
 	// Retrieve user data by token
-	client := configs.GoogleSsoConfig.Client(c, token)
+	client := handler.ssoConfig.Client(c, token)
 	userData, err := handler.RetrieveUserInfo(client, token.AccessToken)
 	if err != nil {
 		fmt.Println("Retrieve user error:", err)
@@ -137,7 +140,7 @@ func (handler *ssoHandler) RenewSession(c *gin.Context) {
 	}
 	session := currentSession.(*dto.Session)
 
-	tokenSource := configs.GoogleSsoConfig.TokenSource(context.Background(), &oauth2.Token{
+	tokenSource := handler.ssoConfig.TokenSource(context.Background(), &oauth2.Token{
 		RefreshToken: session.RefreshToken,
 	})
 
@@ -194,7 +197,7 @@ func (handler *ssoHandler) Logout(c *gin.Context) {
 }
 
 func (handler *ssoHandler) RetrieveUserInfo(client *http.Client, token string) (*dto.CreateUserPayload, error) {
-	userInfourl := os.Getenv("SSO_USER_INFO_URL") + "?access_token=" + token
+	userInfourl := handler.ssoConfig.UserInfoUrl + "?access_token=" + token
 	response, err := client.Get(userInfourl)
 
 	if err != nil {
