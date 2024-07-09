@@ -29,7 +29,6 @@ type ssoHandler struct {
 	service        services.SessionService
 	usersDao       dao.UsersDao
 	invitationsDao dao.InvitationsDao
-	ssoConfig      configs.SsoConfig
 }
 
 func NewSsoHandler() SsoHandler {
@@ -37,10 +36,18 @@ func NewSsoHandler() SsoHandler {
 		service:        services.NewSessionService(),
 		usersDao:       dao.NewUsersDao(),
 		invitationsDao: dao.NewInvitationDao(),
-		ssoConfig:      *configs.NewSsoConfig(consts.Authentik),
 	}
 }
 
+/**
+* SsoLogin handles the initial login process for single sign-on (SSO).
+* This function generates a PKCE verifier and state, sets them in memory cache,
+* and redirects the user to the SSO provider's authorization URL. The SSO provider is determined
+* by the 'provider' query parameter from the request URL. If no provider is specified, it returns
+* a bad request error with an appropriate message.
+*
+* @param c *gin.Context: The Gin context for handling HTTP requests and responses.
+ */
 func (handler *ssoHandler) SsoLogin(c *gin.Context) {
 	// use PKCE to protect against CSRF attacks
 	// https://www.ietf.org/archive/id/draft-ietf-oauth-security-topics-22.html#name-countermeasures-6
@@ -49,9 +56,18 @@ func (handler *ssoHandler) SsoLogin(c *gin.Context) {
 
 	configs.MemoryCache.Set(state, verifier)
 
+	// extract provider from URL and get new SSO config for provider
+	provider := GetIdentifierFromUrl(c, "provider", false)
+	if provider == "" {
+		slugErr := rest_errors.NewBadRequestError("slug is required")
+		c.JSON(slugErr.Status(), slugErr)
+		return
+	}
+	ssoConfig := configs.NewSsoConfig(consts.SsoProvider(provider))
+
 	// Redirect user to consent page to ask for permission
 	// for the scopes specified above.
-	url := handler.ssoConfig.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
+	url := ssoConfig.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
 	c.Redirect(http.StatusFound, url)
 }
 
@@ -67,7 +83,16 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 		fmt.Println(err)
 	}
 
-	token, err := handler.ssoConfig.Exchange(ctx, code, oauth2.VerifierOption(verifier))
+	// extract provider from URL and get new SSO config for provider
+	provider := GetIdentifierFromUrl(c, "provider", false)
+	if provider == "" {
+		slugErr := rest_errors.NewBadRequestError("slug is required")
+		c.JSON(slugErr.Status(), slugErr)
+		return
+	}
+	ssoConfig := configs.NewSsoConfig(consts.SsoProvider(provider))
+
+	token, err := ssoConfig.Exchange(ctx, code, oauth2.VerifierOption(verifier))
 	if err != nil {
 		fmt.Println("Error on SSO token exchange:", err)
 		restErr := rest_errors.NewInternalServerError(err)
@@ -76,8 +101,9 @@ func (handler *ssoHandler) Callback(c *gin.Context) {
 	}
 
 	// Retrieve user data by token
-	client := handler.ssoConfig.Client(c, token)
-	userData, err := handler.RetrieveUserInfo(client, token.AccessToken)
+	client := ssoConfig.Client(c, token)
+	userInfourl := ssoConfig.UserInfoUrl + "?access_token=" + token.AccessToken
+	userData, err := handler.RetrieveUserInfo(client, userInfourl)
 	if err != nil {
 		fmt.Println("Retrieve user error:", err)
 		restErr := rest_errors.NewInternalServerError(err)
@@ -140,7 +166,16 @@ func (handler *ssoHandler) RenewSession(c *gin.Context) {
 	}
 	session := currentSession.(*dto.Session)
 
-	tokenSource := handler.ssoConfig.TokenSource(context.Background(), &oauth2.Token{
+	// extract provider from URL and get new SSO config for provider
+	provider := GetIdentifierFromUrl(c, "provider", false)
+	if provider == "" {
+		slugErr := rest_errors.NewBadRequestError("slug is required")
+		c.JSON(slugErr.Status(), slugErr)
+		return
+	}
+	ssoConfig := configs.NewSsoConfig(consts.SsoProvider(provider))
+
+	tokenSource := ssoConfig.TokenSource(context.Background(), &oauth2.Token{
 		RefreshToken: session.RefreshToken,
 	})
 
@@ -196,8 +231,7 @@ func (handler *ssoHandler) Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, "Success")
 }
 
-func (handler *ssoHandler) RetrieveUserInfo(client *http.Client, token string) (*dto.CreateUserPayload, error) {
-	userInfourl := handler.ssoConfig.UserInfoUrl + "?access_token=" + token
+func (handler *ssoHandler) RetrieveUserInfo(client *http.Client, userInfourl string) (*dto.CreateUserPayload, error) {
 	response, err := client.Get(userInfourl)
 
 	if err != nil {

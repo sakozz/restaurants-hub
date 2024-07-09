@@ -27,27 +27,33 @@ func AuthentikEndpoints() oauth2.Endpoint {
 }
 
 func NewSsoConfig(provider consts.SsoProvider) *SsoConfig {
-
-	config := SsoConfig{
-		oauth2.Config{
-			RedirectURL: os.Getenv("SSO_CALLBACK_URL"),
-			Scopes:      []string{"email", "profile", "offline_access", "openid"},
-		},
-		"",
-	}
+	var config SsoConfig
 
 	switch provider {
 	case consts.Google:
-		config.ClientID = os.Getenv("GOOGLE_CLIENT_ID")
-		config.ClientSecret = os.Getenv("GOOGLE_SECRET_KEY")
-		config.UserInfoUrl = os.Getenv("GOOGLE_SSO_USER_INFO_URL")
-		config.Endpoint = google.Endpoint
+		config = SsoConfig{
+			oauth2.Config{
+				ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+				ClientSecret: os.Getenv("GOOGLE_SECRET_KEY"),
+				Endpoint:     google.Endpoint,
+				RedirectURL:  os.Getenv("GOOGLE_SSO_CALLBACK_URL"),
+				Scopes:       []string{"email", "profile"},
+			},
+			os.Getenv("GOOGLE_SSO_USER_INFO_URL"),
+		}
 	default:
-		config.ClientID = os.Getenv("AUTHENTIK_CLIENT_ID")
-		config.ClientSecret = os.Getenv("AUTHENTIK_SECRET_KEY")
-		config.UserInfoUrl = os.Getenv("AUTHENTIK_SSO_USER_INFO_URL")
-		config.Endpoint = AuthentikEndpoints()
+		config = SsoConfig{
+			oauth2.Config{
+				ClientID:     os.Getenv("AUTHENTIK_CLIENT_ID"),
+				ClientSecret: os.Getenv("AUTHENTIK_SECRET_KEY"),
+				Endpoint:     AuthentikEndpoints(),
+				RedirectURL:  os.Getenv("AUTHENTIK_SSO_CALLBACK_URL"),
+				Scopes:       []string{"email", "profile", "offline_access", "openid"},
+			},
+			os.Getenv("AUTHENTIK_SSO_USER_INFO_URL"),
+		}
 	}
 
 	return &config
+
 }
