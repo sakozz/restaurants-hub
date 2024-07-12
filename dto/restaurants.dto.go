@@ -110,31 +110,23 @@ func (restaurant *Restaurant) AdminUpdableAttributes() []string {
 	return []string{"managerId", "name", "description", "address", "email", "phone", "mobile", "website", "facebookLink", "instagramLink", "deletedAt"}
 }
 
-const (
-	AdminList    ViewTypes = 0
-	OwnerList              = 1
-	AdminDetails           = 2
-	OwnerDetails           = 3
-)
-
 type Restaurants []Restaurant
-type ViewTypes int64
 
-func (record *Restaurant) MemberFor(role consts.Role) interface{} {
-	payload, _ := json.Marshal(record)
+func (restaurant *Restaurant) MemberFor(role consts.Role) interface{} {
+	payload, _ := json.Marshal(restaurant)
 	switch role {
 	case consts.Admin:
 		var details AdminRestaurantDetailItem
 		json.Unmarshal(payload, &details)
-		return serializers.MemberPayload[AdminRestaurantDetailItem]{Id: record.Id, Type: "restaurants", Attributes: details}
+		return serializers.MemberPayload[AdminRestaurantDetailItem]{Id: restaurant.Id, Type: "restaurants", Attributes: details}
 	case consts.Manager:
 		var details OwnerRestaurantDetailItem
 		json.Unmarshal(payload, &details)
-		return serializers.MemberPayload[OwnerRestaurantDetailItem]{Id: record.Id, Type: "restaurants", Attributes: details}
+		return serializers.MemberPayload[OwnerRestaurantDetailItem]{Id: restaurant.Id, Type: "restaurants", Attributes: details}
 	default:
 		var listItem OwnerRestaurantListItem
 		json.Unmarshal(payload, &listItem)
-		return serializers.MemberPayload[OwnerRestaurantListItem]{Id: record.Id, Type: "restaurants", Attributes: listItem}
+		return serializers.MemberPayload[OwnerRestaurantListItem]{Id: restaurant.Id, Type: "restaurants", Attributes: listItem}
 	}
 }
 

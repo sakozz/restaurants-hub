@@ -69,17 +69,17 @@ func (connection *connection) Search(params url.Values) (dto.Pages, rest_errors.
 }
 
 func (connection *connection) GenerateSlug(title string) string {
-	slug := slug.Make(title)
+	pageSlug := slug.Make(title)
 	slugExists := true
 	for slugExists == true {
-		_, err := connection.Get(&slug)
-		/* If err == nil (the record with the generated slug exist) */
+		_, err := connection.Get(&pageSlug)
+		/* If err == nil (the record with the generated pageSlug exist) */
 		slugExists = err == nil
 		if slugExists {
-			slug = slug + "-1"
+			pageSlug = pageSlug + "-1"
 		}
 	}
-	return slug
+	return pageSlug
 }
 
 func (connection *connection) AuthorizedCollection(params url.Values, user *dto.BaseUser) (dto.Pages, rest_errors.RestErr) {

@@ -29,12 +29,12 @@ func NewBaseHandler() BaseHandler {
 	return &baseHandler{}
 }
 
-func WhitelistQueryParams(c *gin.Context, allowdKeys []string) url.Values {
-	allowdKeys = append(allowdKeys, []string{"page", "sort", "size"}...)
+func WhitelistQueryParams(c *gin.Context, allowedKeys []string) url.Values {
+	allowedKeys = append(allowedKeys, []string{"page", "sort", "size"}...)
 	params := c.Request.URL.Query()
 	for key, _ := range params {
 		attr := strings.Split(key, "__")[0]
-		if !slices.Contains(allowdKeys, attr) {
+		if !slices.Contains(allowedKeys, attr) {
 			delete(params, key)
 		}
 	}
